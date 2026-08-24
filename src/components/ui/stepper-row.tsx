@@ -1,6 +1,7 @@
 "use client";
 
 import { Minus, Plus } from "lucide-react";
+import { NumberField } from "./number-field";
 
 /**
  * Label on the left, − value + on the right.
@@ -46,13 +47,11 @@ export function StepperRow({
         </button>
 
         <span className="flex items-baseline justify-center gap-1 px-1">
-          <input
-            type="number"
-            inputMode="decimal"
+          <NumberField
             step={step}
-            value={Number.isFinite(value) ? value : ""}
-            onChange={(e) => onChange(clamp(Number(e.target.value)))}
-            aria-label={label}
+            value={Number.isFinite(value) ? value : null}
+            onChange={(v) => onChange(clamp(v))}
+            ariaLabel={label}
             className="metric w-[68px] bg-transparent text-center text-[17px] font-[650] text-foreground outline-none"
           />
           {suffix ? (

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import { Card, SectionLabel } from "@/components/ui/card";
+import { NumberField } from "@/components/ui/number-field";
 import { EstimateWarning } from "./verification-badge";
 import { useAuth } from "@/lib/auth-context";
 import { createFood, updateFood } from "@/lib/repo/foods";
@@ -203,13 +204,11 @@ export function FoodForm({
 
         <div className="grid grid-cols-3 gap-3">
           <Field label="Amount" htmlFor="sa">
-            <input
+            <NumberField
               id="sa"
-              type="number"
-              inputMode="decimal"
               step="0.25"
               value={draft.servingAmount}
-              onChange={(e) => set("servingAmount", Number(e.target.value))}
+              onChange={(v) => set("servingAmount", v)}
               className="input h-11 w-full px-3 text-[15px]"
             />
           </Field>
@@ -223,17 +222,12 @@ export function FoodForm({
             />
           </Field>
           <Field label="Grams" htmlFor="sw">
-            <input
+            <NumberField
               id="sw"
-              type="number"
-              inputMode="decimal"
-              value={draft.servingWeightGrams ?? ""}
-              onChange={(e) =>
-                set(
-                  "servingWeightGrams",
-                  e.target.value ? Number(e.target.value) : null,
-                )
-              }
+              value={draft.servingWeightGrams}
+              onChange={(v) => set("servingWeightGrams", v)}
+              allowNull
+              onNull={() => set("servingWeightGrams", null)}
               placeholder="50"
               className="input h-11 w-full px-3 text-[15px]"
             />
@@ -251,58 +245,46 @@ export function FoodForm({
 
         <div className="mt-3 grid grid-cols-2 gap-3">
           <Field label="Calories" htmlFor="cal">
-            <input
+            <NumberField
               id="cal"
-              type="number"
-              inputMode="decimal"
               value={draft.caloriesPerServing}
-              onChange={(e) =>
-                set("caloriesPerServing", Number(e.target.value))
-              }
+              onChange={(v) => set("caloriesPerServing", v)}
               className="input h-11 w-full px-3 text-[15px]"
             />
           </Field>
           <Field label="Protein (g)" htmlFor="pro">
-            <input
+            <NumberField
               id="pro"
-              type="number"
-              inputMode="decimal"
               step="0.1"
               value={draft.proteinPerServing}
-              onChange={(e) => set("proteinPerServing", Number(e.target.value))}
+              onChange={(v) => set("proteinPerServing", v)}
               className="input h-11 w-full px-3 text-[15px]"
             />
           </Field>
           <Field label="Fat (g)" htmlFor="fat">
-            <input
+            <NumberField
               id="fat"
-              type="number"
-              inputMode="decimal"
               step="0.1"
               value={draft.fatPerServing}
-              onChange={(e) => set("fatPerServing", Number(e.target.value))}
+              onChange={(v) => set("fatPerServing", v)}
               className="input h-11 w-full px-3 text-[15px]"
             />
           </Field>
           <Field label="Carbs (g)" htmlFor="carb">
-            <input
+            <NumberField
               id="carb"
-              type="number"
-              inputMode="decimal"
               step="0.1"
               value={draft.carbsPerServing}
-              onChange={(e) => set("carbsPerServing", Number(e.target.value))}
+              onChange={(v) => set("carbsPerServing", v)}
               className="input h-11 w-full px-3 text-[15px]"
             />
           </Field>
           <Field label="Fiber (g)" htmlFor="fib">
-            <input
+            <NumberField
               id="fib"
-              type="number"
-              inputMode="decimal"
               step="0.1"
               value={draft.fiberPerServing}
-              onChange={(e) => set("fiberPerServing", Number(e.target.value))}
+              onChange={(v) => set("fiberPerServing", v)}
               className="input h-11 w-full px-3 text-[15px]"
             />
           </Field>

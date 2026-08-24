@@ -1,7 +1,32 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/**
+ * Scroll lock, counted rather than saved and restored.
+ *
+ * Two sheets overlap whenever the food picker hands off to the quantity
+ * sheet. With each one snapshotting body.overflow on open and writing that
+ * snapshot back on close, the second sheet captures "hidden" from the first
+ * and restores it on the way out — leaving the page permanently unscrollable.
+ * A counter cannot get into that state.
+ */
+let lockCount = 0;
+
+function lockScroll(): () => void {
+  if (lockCount === 0) document.body.style.overflow = "hidden";
+  lockCount++;
+
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    lockCount = Math.max(0, lockCount - 1);
+    if (lockCount === 0) document.body.style.overflow = "";
+  };
+}
 
 /**
  * Bottom sheet — 24px top corners, 250ms rise, per DESIGN.md.
@@ -28,11 +53,11 @@ export function Sheet({
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockScroll();
+
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
+      unlock();
     };
   }, [open, onClose]);
 
@@ -69,9 +94,30 @@ export function Sheet({
         )}
         style={{ background: "var(--background-secondary)" }}
       >
-        {/* Grab handle — signals the sheet is dismissible. */}
-        <div className="flex shrink-0 justify-center pb-1 pt-3">
-          <div className="h-1 w-9 rounded-full bg-white/15" />
+        {/*
+          Dismissal needs an explicit control. A full-height sheet leaves only
+          a sliver of backdrop, and on a phone that sliver sits under the
+          status bar — so tapping "outside" is not actually reachable.
+        */}
+        <div className="relative flex shrink-0 items-center justify-center pb-1 pt-3">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-7 w-16 items-center justify-center"
+          >
+            <span className="h-1 w-9 rounded-full bg-white/20" />
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            tabIndex={open ? 0 : -1}
+            className="pressable absolute right-2 top-1 flex h-11 w-11 items-center justify-center rounded-full text-muted"
+          >
+            <X className="h-[18px] w-[18px]" strokeWidth={2} />
+          </button>
         </div>
         {children}
       </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
+import { NumberField } from "@/components/ui/number-field";
 import { useAuth } from "@/lib/auth-context";
 import { deleteWeight, saveWeight } from "@/lib/repo/weight-logs";
 import { formatLongDate, isToday, type DateKey } from "@/lib/dates";
@@ -93,12 +94,11 @@ export function WeightSheet({
 
           <label className="flex items-baseline gap-1.5">
             <span className="sr-only">Weight in {unit}</span>
-            <input
-              type="number"
-              inputMode="decimal"
+            <NumberField
               step="0.1"
-              value={Number.isFinite(weight) ? weight : ""}
-              onChange={(e) => setWeight(Number(e.target.value))}
+              value={Number.isFinite(weight) ? weight : null}
+              onChange={setWeight}
+              ariaLabel={`Weight in ${unit}`}
               className="metric w-[128px] bg-transparent text-center text-[40px] font-[650] leading-none text-foreground outline-none"
             />
             <span className="text-[15px] text-muted">{unit}</span>
@@ -124,13 +124,13 @@ export function WeightSheet({
             <label className="label-metric mb-2 block" htmlFor="waist">
               Waist (optional)
             </label>
-            <input
+            <NumberField
               id="waist"
-              type="number"
-              inputMode="decimal"
               step="0.1"
-              value={waist}
-              onChange={(e) => setWaist(e.target.value)}
+              value={waist === "" ? null : Number(waist)}
+              onChange={(v) => setWaist(String(v))}
+              allowNull
+              onNull={() => setWaist("")}
               placeholder="inches"
               className="input h-12 w-full px-3.5 text-[15px]"
             />
