@@ -135,7 +135,7 @@ export default function SettingsPage() {
               label="Starting weight"
               value={draft.startingWeight}
               onChange={(v) => set("startingWeight", v)}
-              step={0.2}
+              step={0.1}
               decimals={1}
               min={30}
               max={700}
@@ -145,7 +145,7 @@ export default function SettingsPage() {
               label="Goal weight"
               value={draft.goalWeight}
               onChange={(v) => set("goalWeight", v)}
-              step={0.5}
+              step={0.1}
               decimals={1}
               min={30}
               max={700}

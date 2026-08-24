@@ -26,7 +26,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <FoodPickerProvider>
       {/* Bottom padding clears the nav bar plus the home indicator. */}
-      <div className="min-h-dvh pb-[calc(76px+env(safe-area-inset-bottom,0px))]">
+      <div className="min-h-dvh pt-safe pb-[calc(76px+env(safe-area-inset-bottom,0px))]">
         {children}
       </div>
       <BottomNav />

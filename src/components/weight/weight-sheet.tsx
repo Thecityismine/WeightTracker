@@ -8,8 +8,9 @@ import { deleteWeight, saveWeight } from "@/lib/repo/weight-logs";
 import { formatLongDate, isToday, type DateKey } from "@/lib/dates";
 import type { WeightLog } from "@/types";
 
-/** Scales read in tenths; 0.2 keeps the stepper from being a chore. */
-const STEP = 0.2;
+/** Scales read in tenths, so the stepper steps in tenths. Anything coarser
+ *  makes a real weigh-in like 144.7 unreachable. */
+const STEP = 0.1;
 
 export function WeightSheet({
   open,
