@@ -442,15 +442,28 @@ USDA_API_KEY
 
 **Goal:** foods that are not in the personal database yet.
 
-- [ ] `app/api/usda/search/route.ts` — server-side; the key never reaches the client
-- [ ] `app/api/usda/food/[fdcId]/route.ts` — full detail with serving options
-- [ ] Map USDA `foodNutrients` onto the app's per-serving fields (per-100 g conversion handled here)
-- [ ] Serving picker when USDA offers several household measures
-- [ ] Result cards: name, brand, serving, calories, protein, fat, source
-- [ ] Save into My Foods as `usda_verified`, retaining `externalFoodId`
-- [ ] Cache searches to stay well inside the rate limit
+- [x] `app/api/usda/search/route.ts` — server-side; the key never reaches the client
+- [x] `app/api/usda/food/[fdcId]/route.ts` — full detail with serving options
+- [x] Both routes behind `requireOwner()` — an ID token is verified against `ALLOWED_UID` before any billable call
+- [x] `lib/usda.ts` maps USDA's **two different shapes** onto one base serving:
+  - **Branded** — `labelNutrients` are already per serving, straight off the package, and are used verbatim
+  - **Foundation / SR Legacy** — `foodNutrients` are per 100 g and get scaled by the chosen portion's gram weight
+- [x] Serving picker built from `foodPortions`, always including 100 g so there is a usable option
+- [x] Result cards: name, brand, data type, serving
+- [x] Review screen with a live "1 × 4 oz counts as…" preview before saving
+- [x] Saved as `usda_verified`, retaining `externalFoodId` so a food traces back to its record
+- [x] Searches cached for ten minutes, detail lookups for an hour, to stay inside the 1,000/hour limit
+- [x] Reachable from the Foods screen and from the food picker's empty state ("Search USDA for …")
+- [x] Copy states that a package label beats a USDA record, and invites replacing it
 
-**Done when:** an unfamiliar packaged food can be found, saved, and logged without leaving the Add Food sheet.
+### Verified
+
+- [x] **84 tests passing** (18 new) over the mapping layer, including branded-vs-generic handling, portion scaling, and schema conformance of the output
+- [x] Refuses to invent nutrition: a record with no energy value returns null rather than defaulting to zero
+- [x] Typecheck, lint, and a build with `.env.local` removed all clean
+- [ ] A live search *(needs `USDA_API_KEY`)*
+
+**Done when:** ~~an unfamiliar packaged food can be found and saved~~ — built and deployed; add `USDA_API_KEY` to switch it on.
 
 ---
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Search, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Check, Database, Search, Sparkles } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { FoodCard } from "./food-card";
 import { QuantitySheet } from "./quantity-sheet";
@@ -185,14 +186,26 @@ export function AddFoodSheet() {
             ) : loading ? (
               <p className="pt-8 text-center text-[13px] text-muted">Loading…</p>
             ) : visible.length === 0 ? (
-              <Empty
-                title={term ? "No matches" : "No foods yet"}
-                body={
-                  term
-                    ? "Nothing in your database matches that."
-                    : "Load the starter foods from Settings, then everything you eat regularly is one tap away."
-                }
-              />
+              <div>
+                <Empty
+                  title={term ? "No matches" : "No foods yet"}
+                  body={
+                    term
+                      ? "Nothing in your database matches that."
+                      : "Load the starter foods from Settings, then everything you eat regularly is one tap away."
+                  }
+                />
+                {term ? (
+                  <Link
+                    href={`/foods/search?q=${encodeURIComponent(term)}`}
+                    onClick={closePicker}
+                    className="btn-secondary pressable mx-auto mt-4 flex h-11 w-full max-w-xs items-center justify-center gap-2 text-[14px] font-[600]"
+                  >
+                    <Database className="h-4 w-4" />
+                    Search USDA for &ldquo;{term}&rdquo;
+                  </Link>
+                ) : null}
+              </div>
             ) : (
               <div className="space-y-2 pt-3">
                 {visible.map((food) => (

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Heart, Plus, Search } from "lucide-react";
+import { ChevronRight, Database, Heart, Plus, Search } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
 import { VerificationBadge } from "@/components/foods/verification-badge";
 import { useAuth } from "@/lib/auth-context";
@@ -100,13 +100,22 @@ export default function FoodsPage() {
           </select>
         </div>
 
-        <Link
-          href="/foods/new"
-          className="btn-primary pressable mt-3 flex h-11 w-full items-center justify-center gap-2 text-[14px] font-[600]"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} />
-          New food
-        </Link>
+        <div className="mt-3 flex gap-2">
+          <Link
+            href="/foods/new"
+            className="btn-primary pressable flex h-11 flex-1 items-center justify-center gap-2 text-[14px] font-[600]"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+            New food
+          </Link>
+          <Link
+            href={`/foods/search${term ? `?q=${encodeURIComponent(term)}` : ""}`}
+            className="btn-secondary pressable flex h-11 flex-1 items-center justify-center gap-2 text-[14px] font-[600]"
+          >
+            <Database className="h-4 w-4" />
+            USDA search
+          </Link>
+        </div>
 
         <div className="mt-4 space-y-2 pb-8">
           {loading ? (
