@@ -384,19 +384,28 @@ USDA_API_KEY
 
 **Goal:** the trend, not the noise.
 
-- [ ] Progress header: starting weight, current seven-day average (the largest number on the page), goal weight, pounds gained, pounds remaining, percent to goal, estimated goal date
-- [ ] Weight progress line: starting left, goal right, glowing blue position marker that turns green at goal
-- [ ] Chart 1 — daily weight (muted gray) with the seven-day average (electric blue) overlaid
-- [ ] Chart 2 — daily calories against a thin horizontal target line
-- [ ] Chart 3 — daily protein in violet against its target line
-- [ ] Chart 4 — weekly calorie intake versus weekly weight change
-- [ ] Chart surfaces carry faint horizontal grid lines only — no grid boxes, no vertical rules
-- [ ] Weekly summary table: average calories, protein, and fat; calorie-target days (5 of 7); protein-target days; starting, ending, and average weekly weight; weekly change
-- [ ] Plain-language interpretation generated from those numbers
-- [ ] Stall detection: no weight change across two full weeks → suggest +150 cal/day
-- [ ] **The app suggests; the user approves.** Targets never change on their own
+- [x] Progress header: starting weight, **current seven-day average as the largest number on the page**, goal weight, pounds gained, pounds remaining, percent to goal, estimated goal date
+- [x] Weight progress bar from start to goal, turning green at the goal
+- [x] Chart 1 — daily weight (muted gray) with the seven-day average (electric blue) overlaid
+- [x] Chart 2 — daily calories against a dashed target line
+- [x] Chart 3 — daily protein in violet against its target line
+- [x] Chart 4 — weekly average intake against the weight change it produced
+- [x] Chart surfaces carry faint horizontal grid lines only — no grid boxes, no vertical rules, no axis lines
+- [x] Weekly summary table: average calories, protein and fat; calorie-target days; protein-target days; average weekly weight; weekly change
+- [x] Plain-language interpretation, including a warning when the gain is *too fast* — that adds fat, not muscle
+- [x] Stall detection over two **complete** weeks → suggests +150 cal/day
+- [x] **The app suggests; you approve.** The new target is applied only by an explicit tap
+- [x] Goal-date projection refuses to print a date when weight is flat or falling, rather than inventing a confident number
+- [x] `lib/progress.ts` is pure and fully tested — the screen renders these numbers, it never derives its own
 
-**Done when:** the weekly summary reads like a coach's note, and applying a suggested adjustment requires an explicit tap.
+### Verified
+
+- [x] **66 tests passing** (24 new), covering week grouping, stall detection, goal projection and the interpretation copy
+- [x] Weekly change compares weekly **averages**, not single mornings — with a test proving the difference
+- [x] Typecheck, lint, and a build with `.env.local` removed all clean
+- [ ] Reading real trends *(needs two weeks of data)*
+
+**Done when:** ~~the weekly summary reads like a coach's note~~ — built and deployed; the charts fill in as data accumulates.
 
 ---
 
