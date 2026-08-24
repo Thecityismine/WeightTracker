@@ -14,7 +14,8 @@ import { useFoods } from "@/lib/hooks/use-foods";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { useWeights } from "@/lib/hooks/use-weights";
 import { useMounted } from "@/lib/use-mounted";
-import { copyMeal, deleteLog, updateLogQuantity } from "@/lib/repo/food-logs";
+import { addLog, copyMeal, deleteLog, updateLogQuantity } from "@/lib/repo/food-logs";
+import { recordUse } from "@/lib/repo/foods";
 import { createTemplate } from "@/lib/repo/meal-templates";
 import { carbTarget, formatWeight, sumMacros } from "@/lib/nutrition";
 import { MEAL_CATEGORIES, MEAL_LABELS, type MealCategory } from "@/lib/constants";
@@ -27,7 +28,7 @@ import {
   todayKey,
   type DateKey,
 } from "@/lib/dates";
-import type { FoodLog } from "@/types";
+import type { Food, FoodLog } from "@/types";
 
 export default function TodayPage() {
   const { user } = useAuth();
@@ -38,6 +39,10 @@ export default function TodayPage() {
   const [editing, setEditing] = useState<FoodLog | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [weighing, setWeighing] = useState(false);
+  const [quickAdd, setQuickAdd] = useState<{
+    food: Food;
+    meal: MealCategory;
+  } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const { profile, targets } = useProfile(user?.uid ?? null);
@@ -64,6 +69,23 @@ export default function TodayPage() {
   async function handleDelete(log: FoodLog) {
     if (!user) return;
     await deleteLog(user.uid, log.id, log.logDate, targets);
+  }
+
+  async function handleQuickAdd(quantity: number) {
+    if (!user || !quickAdd) return;
+    await addLog(
+      user.uid,
+      quickAdd.food,
+      {
+        foodId: quickAdd.food.id,
+        logDate: date,
+        mealCategory: quickAdd.meal,
+        quantity,
+      },
+      targets,
+    );
+    void recordUse(quickAdd.food.id);
+    setQuickAdd(null);
   }
 
   async function handleCopyYesterday(meal: MealCategory) {
@@ -231,6 +253,8 @@ export default function TodayPage() {
               onDelete={(log) => void handleDelete(log)}
               onCopyYesterday={(m) => void handleCopyYesterday(m)}
               onSaveAsMeal={(m) => void handleSaveAsMeal(m)}
+              foods={foods}
+              onQuickAdd={(f, m) => setQuickAdd({ food: f, meal: m })}
             />
           ))
         )}
@@ -248,6 +272,16 @@ export default function TodayPage() {
           {toast}
         </button>
       ) : null}
+
+      <QuantitySheet
+        key={`qa-${quickAdd?.food.id ?? "none"}`}
+        food={quickAdd?.food ?? null}
+        meal={quickAdd?.meal ?? "breakfast"}
+        open={Boolean(quickAdd)}
+        initialQuantity={1}
+        onClose={() => setQuickAdd(null)}
+        onConfirm={(q) => void handleQuickAdd(q)}
+      />
 
       <WeightSheet
         key={`w-${date}-${weightToday?.weight ?? "none"}`}

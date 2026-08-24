@@ -175,6 +175,38 @@ export function dayStatus(
 }
 
 /**
+ * How much of a batch ingredient ends up in one portion.
+ *
+ *   portionQuantity = batchQuantity x portionsEaten / servingsPrepared
+ *
+ * This exists because of cooking oil. A tablespoon in the pan that cooks four
+ * bowls puts a quarter tablespoon in each — roughly 30 calories and 3.4 g of
+ * fat, not 119 and 13.5. Recording the whole tablespoon against every bowl
+ * overstates the day by nearly 360 calories, and recording none of it
+ * understates a real and easily-missed source of fat.
+ *
+ * The same applies to salt and seasoning blends, where the miscount lands on
+ * sodium rather than calories.
+ */
+export function portionQuantity(
+  batchQuantity: number,
+  portionsEaten: number,
+  servingsPrepared: number,
+): number {
+  assertFinite(batchQuantity, "batchQuantity");
+  assertFinite(portionsEaten, "portionsEaten");
+  assertFinite(servingsPrepared, "servingsPrepared");
+
+  if (servingsPrepared <= 0) {
+    throw new RangeError(
+      `servingsPrepared must be greater than zero, got ${servingsPrepared}`,
+    );
+  }
+
+  return (batchQuantity * portionsEaten) / servingsPrepared;
+}
+
+/**
  * Carbohydrate target, derived rather than configured.
  *
  * Protein and fat are set for their own reasons — muscle synthesis and

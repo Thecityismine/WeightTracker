@@ -197,6 +197,9 @@ function ReportDocument({
           the second table are only present when a food&apos;s label listed them —
           each shows the share of calories it covers, and a figure below 100%
           coverage is a <strong>minimum</strong>, not an average.
+          {" "}Cooking oil and seasoning are logged as separate ingredients, so
+          fat added in the pan and sodium added at the table appear here rather
+          than being absorbed into a dish&apos;s totals.
         </p>
       </section>
 
@@ -288,6 +291,62 @@ function ReportDocument({
           <CoverageNote label="Cholesterol" stat={r.cholesterolMg} />
           <CoverageNote label="Sodium" stat={r.sodiumMg} />
         </div>
+      </Section>
+
+      {r.topSodium.length > 0 ? (
+        <Section title="Largest sodium sources">
+          <table>
+            <thead>
+              <tr>
+                <th>Food</th>
+                <th>Times logged</th>
+                <th>Sodium</th>
+                <th>Calories</th>
+              </tr>
+            </thead>
+            <tbody>
+              {r.topSodium.map((c) => (
+                <tr key={c.name}>
+                  <td>{c.name}</td>
+                  <td>{c.entries}</td>
+                  <td>{Math.round(c.sodiumMg ?? 0).toLocaleString()} mg</td>
+                  <td>{Math.round(c.calories).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="muted-ink mt-2 text-[11px]">
+            Ranked among foods that carried a sodium value. Salt and seasoning
+            blends usually lead this table while adding almost no calories.
+          </p>
+        </Section>
+      ) : null}
+
+      <Section title="Largest calorie sources">
+        <table>
+          <thead>
+            <tr>
+              <th>Food</th>
+              <th>Times logged</th>
+              <th>Calories</th>
+              <th>Share of month</th>
+            </tr>
+          </thead>
+          <tbody>
+            {r.topCalories.map((c) => (
+              <tr key={c.name}>
+                <td>{c.name}</td>
+                <td>{c.entries}</td>
+                <td>{Math.round(c.calories).toLocaleString()}</td>
+                <td>
+                  {r.calories.total > 0
+                    ? `${Math.round((c.calories / r.calories.total) * 100)}%`
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Section>
 
       <section className="page-break mt-6">

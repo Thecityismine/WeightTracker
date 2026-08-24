@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { BookmarkPlus, ChevronRight, CopyPlus, Plus, Trash2 } from "lucide-react";
+import { ExtrasRow } from "./extras-row";
 import { formatCalories, formatMacro, sumMacros } from "@/lib/nutrition";
 import { MEAL_LABELS, type MealCategory } from "@/lib/constants";
-import type { FoodLog } from "@/types";
+import type { Food, FoodLog } from "@/types";
 
 /**
  * A meal is a light list group, not a heavy container — thin divider under
@@ -20,6 +21,8 @@ export function MealSection({
   onDelete,
   onCopyYesterday,
   onSaveAsMeal,
+  foods,
+  onQuickAdd,
 }: {
   meal: MealCategory;
   logs: FoodLog[];
@@ -30,6 +33,8 @@ export function MealSection({
   onDelete: (log: FoodLog) => void;
   onCopyYesterday: (meal: MealCategory) => void;
   onSaveAsMeal: (meal: MealCategory) => void;
+  foods: Food[];
+  onQuickAdd: (food: Food, meal: MealCategory) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -98,6 +103,8 @@ export function MealSection({
               ? `Add ${MEAL_LABELS[meal].toLowerCase()}`
               : "Add food"}
           </button>
+
+          <ExtrasRow foods={foods} onPick={(f) => onQuickAdd(f, meal)} />
 
           {/* Secondary actions stay quiet — muted, small, never blue, so the
               primary "Add food" keeps its emphasis. */}

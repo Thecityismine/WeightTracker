@@ -11,6 +11,8 @@ import type { MealCategory } from "@/lib/constants";
 export type StarterTemplate = {
   name: string;
   meal: MealCategory;
+  /** Portions the listed quantities make. 1 means already per-serving. */
+  servingsPrepared?: number;
   items: { foodName: string; quantity: number }[];
 };
 
@@ -56,6 +58,25 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
       { foodName: "Banana", quantity: 1 },
       { foodName: "Whole milk", quantity: 1 },
       { foodName: "Honey", quantity: 1 },
+    ],
+  },
+  {
+    // A batch recipe: the quantities below are for the WHOLE pan, and one
+    // tablespoon of oil cooking four bowls contributes a quarter tablespoon to
+    // each. Seasonings are separate ingredients rather than baked into the
+    // chicken, so the salt can be adjusted without touching the protein.
+    name: "Chicken and quinoa bowl (batch of 4)",
+    meal: "lunch",
+    servingsPrepared: 4,
+    items: [
+      { foodName: "Quinoa, cooked", quantity: 4 },
+      { foodName: "Chicken breast, cooked, diced", quantity: 4 },
+      { foodName: "Onion and green pepper, cooked", quantity: 4 },
+      { foodName: "Olive oil", quantity: 1 },
+      { foodName: "Garlic powder", quantity: 1 },
+      { foodName: "Black pepper, ground", quantity: 0.5 },
+      { foodName: "Paprika", quantity: 1 },
+      { foodName: "Table salt", quantity: 0.5 },
     ],
   },
   {

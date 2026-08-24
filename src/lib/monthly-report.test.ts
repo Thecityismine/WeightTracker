@@ -236,3 +236,52 @@ describe("buildMonthlyReport", () => {
     expect(r.days).toEqual([]);
   });
 });
+
+describe("contributor tables", () => {
+  it("ranks sodium sources by their contribution, not their calories", () => {
+    const r = buildMonthlyReport(
+      "2026-08-01",
+      "2026-08-31",
+      [
+        log("2026-08-01", 5, { nameSnapshot: "Table salt", sodiumMgSnapshot: 1160 }),
+        log("2026-08-01", 700, { nameSnapshot: "Chicken breast", sodiumMgSnapshot: 104 }),
+      ],
+      [],
+      TARGETS,
+    );
+
+    // The near-zero-calorie item is the dominant sodium source, which is the
+    // whole reason this table exists.
+    expect(r.topSodium[0].name).toBe("Table salt");
+    expect(r.topSodium[0].sodiumMg).toBe(1160);
+    expect(r.topCalories[0].name).toBe("Chicken breast");
+  });
+
+  it("aggregates repeat entries of the same food", () => {
+    const r = buildMonthlyReport(
+      "2026-08-01",
+      "2026-08-31",
+      [
+        log("2026-08-01", 119, { nameSnapshot: "Olive oil" }),
+        log("2026-08-02", 119, { nameSnapshot: "Olive oil" }),
+      ],
+      [],
+      TARGETS,
+    );
+
+    expect(r.topCalories[0].name).toBe("Olive oil");
+    expect(r.topCalories[0].entries).toBe(2);
+    expect(r.topCalories[0].calories).toBe(238);
+  });
+
+  it("omits foods with no sodium recorded from the sodium table", () => {
+    const r = buildMonthlyReport(
+      "2026-08-01",
+      "2026-08-31",
+      [log("2026-08-01", 500, { nameSnapshot: "Mystery food" })],
+      [],
+      TARGETS,
+    );
+    expect(r.topSodium).toHaveLength(0);
+  });
+});

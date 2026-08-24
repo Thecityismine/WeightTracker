@@ -8,6 +8,7 @@ import {
   formatMacro,
   gramsToServings,
   isTargetReached,
+  portionQuantity,
   progressPercent,
   progressRatio,
   projectedWeeklyGain,
@@ -344,5 +345,47 @@ describe("carbTarget", () => {
   it("floors at zero rather than going negative", () => {
     // Protein and fat alone already exceed the calorie budget.
     expect(carbTarget({ calories: 1000, protein: 200, fat: 100 })).toBe(0);
+  });
+});
+
+describe("portionQuantity", () => {
+  it("splits a batch ingredient across the servings it made", () => {
+    // One tablespoon of oil in a pan cooking four bowls.
+    expect(portionQuantity(1, 1, 4)).toBe(0.25);
+  });
+
+  it("scales when more than one portion is eaten", () => {
+    expect(portionQuantity(1, 2, 4)).toBe(0.5);
+  });
+
+  it("is the identity for a single-serving recipe", () => {
+    // servingsPrepared 1 means the quantities are already per-serving, which
+    // is how every template behaved before recipes existed.
+    expect(portionQuantity(3, 1, 1)).toBe(3);
+  });
+
+  it("handles the framework doc's oil example", () => {
+    // 1 tbsp olive oil = 119 kcal, 13.5 g fat. A quarter of that is what the
+    // doc says to record: about 30 kcal and 3.4 g fat.
+    const q = portionQuantity(1, 1, 4);
+    const oil = {
+      caloriesPerServing: 119,
+      proteinPerServing: 0,
+      fatPerServing: 13.5,
+      carbsPerServing: 0,
+      fiberPerServing: 0,
+    };
+    const macros = computeLogMacros(oil, q);
+    expect(Math.round(macros.calories)).toBe(30);
+    expect(roundTo(macros.fat, 1)).toBe(3.4);
+  });
+
+  it("refuses to divide by zero servings", () => {
+    expect(() => portionQuantity(1, 1, 0)).toThrow(RangeError);
+    expect(() => portionQuantity(1, 1, -2)).toThrow(RangeError);
+  });
+
+  it("throws rather than producing NaN", () => {
+    expect(() => portionQuantity(Number.NaN, 1, 4)).toThrow(TypeError);
   });
 });

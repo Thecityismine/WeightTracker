@@ -72,7 +72,13 @@ export default function TemplatesPage() {
           continue;
         }
 
-        await createTemplate(user.uid, starter.name, starter.meal, items);
+        await createTemplate(
+          user.uid,
+          starter.name,
+          starter.meal,
+          items,
+          starter.servingsPrepared ?? 1,
+        );
         created++;
       }
 
@@ -89,7 +95,11 @@ export default function TemplatesPage() {
     }
   }
 
-  async function handleApply(template: TemplateDoc, meal: MealCategory) {
+  async function handleApply(
+    template: TemplateDoc,
+    meal: MealCategory,
+    portions: number,
+  ) {
     if (!user) return;
     setBusy(true);
     setNotice(null);
@@ -101,9 +111,13 @@ export default function TemplatesPage() {
         todayKey(),
         meal,
         targets,
+        portions,
       );
+      const servings = template.servingsPrepared ?? 1;
+      const portionNote =
+        servings > 1 ? ` at ${formatQty(portions)} of ${servings} portions` : "";
       setNotice(
-        `Added ${added} food${added === 1 ? "" : "s"} to ${MEAL_LABELS[meal]}.` +
+        `Added ${added} food${added === 1 ? "" : "s"} to ${MEAL_LABELS[meal]}${portionNote}.` +
           (missing
             ? ` ${missing} ingredient${missing === 1 ? " was" : "s were"} skipped — the food is no longer in your database.`
             : ""),
@@ -115,13 +129,14 @@ export default function TemplatesPage() {
 
   async function handleCreateBlank() {
     if (!user) return;
-    const id = await createTemplate(user.uid, "New meal", "breakfast", []);
+    const id = await createTemplate(user.uid, "New meal", "breakfast", [], 1);
     const created: TemplateDoc = {
       id,
       userId: user.uid,
       name: "New meal",
       defaultMealCategory: "breakfast",
       items: [],
+      servingsPrepared: 1,
       createdAt: new Date().toISOString(),
     };
     setEditing(created);
@@ -224,11 +239,22 @@ function TemplateCard({
   template: TemplateDoc;
   foods: Food[];
   busy: boolean;
-  onApply: (t: TemplateDoc, meal: MealCategory) => Promise<void>;
+  onApply: (
+    t: TemplateDoc,
+    meal: MealCategory,
+    portions: number,
+  ) => Promise<void>;
   onEdit: () => void;
 }) {
   const [meal, setMeal] = useState<MealCategory>(template.defaultMealCategory);
-  const macros = templateMacros(template, foods);
+  const [portions, setPortions] = useState(1);
+
+  const servings = template.servingsPrepared ?? 1;
+  const isRecipe = servings > 1;
+
+  // Per portion is the number that matters when eating; the batch total is
+  // what you check while cooking.
+  const macros = templateMacros(template, foods, true);
 
   return (
     <Card className="px-5 py-4">
@@ -247,7 +273,15 @@ function TemplateCard({
               {"  "}
               {formatMacro(macros.fat)}g F
             </span>
+            {isRecipe ? (
+              <span className="text-muted">{"  "}per portion</span>
+            ) : null}
           </p>
+          {isRecipe ? (
+            <p className="mt-0.5 text-[11px] text-muted">
+              Recipe makes {servings} portions
+            </p>
+          ) : null}
         </div>
         <button
           type="button"
@@ -270,8 +304,8 @@ function TemplateCard({
                 {food ? food.name : "Removed food"}
               </span>
               <span className="metric shrink-0 text-muted">
-                {formatQty(item.quantity)} ×{" "}
-                {food ? food.servingDescription : "—"}
+                {formatQty(isRecipe ? item.quantity / servings : item.quantity)}{" "}
+                × {food ? food.servingDescription : "—"}
               </span>
             </li>
           );
@@ -280,6 +314,36 @@ function TemplateCard({
           <li className="text-[13px] text-muted">No ingredients yet.</li>
         ) : null}
       </ul>
+
+      {isRecipe ? (
+        <div className="mt-3">
+          <label className="label-metric mb-1.5 block">Portions eaten</label>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Fewer portions"
+              onClick={() => setPortions((p) => Math.max(0.25, round4(p - 0.25)))}
+              className="btn-secondary pressable flex h-10 w-10 items-center justify-center rounded-full"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <span className="metric w-12 text-center text-[16px] font-[650] text-foreground">
+              {formatQty(portions)}
+            </span>
+            <button
+              type="button"
+              aria-label="More portions"
+              onClick={() =>
+                setPortions((p) => Math.min(servings, round4(p + 0.25)))
+              }
+              className="btn-secondary pressable flex h-10 w-10 items-center justify-center rounded-full"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-[12px] text-muted">of {servings}</span>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-4 flex gap-2">
         <select
@@ -297,7 +361,7 @@ function TemplateCard({
 
         <button
           type="button"
-          onClick={() => void onApply(template, meal)}
+          onClick={() => void onApply(template, meal, portions)}
           disabled={busy || template.items.length === 0}
           className="btn-primary pressable flex h-11 flex-1 items-center justify-center gap-2 text-[14px] font-[600] disabled:opacity-40"
         >
@@ -324,6 +388,7 @@ function TemplateEditor({
     template?.defaultMealCategory ?? "breakfast",
   );
   const [items, setItems] = useState<TemplateItem[]>(template?.items ?? []);
+  const [servings, setServings] = useState(template?.servingsPrepared ?? 1);
   const [term, setTerm] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -354,6 +419,7 @@ function TemplateEditor({
         name: name.trim() || "Untitled meal",
         defaultMealCategory: meal,
         items,
+        servingsPrepared: Math.max(1, Math.round(servings)),
       });
       onClose();
     } finally {
@@ -393,10 +459,49 @@ function TemplateEditor({
               </option>
             ))}
           </select>
+
+          {/*
+            The recipe control. Above 1, the ingredient quantities below
+            describe the whole batch and logging a portion divides by this —
+            which is what lets one tablespoon of oil cook four bowls.
+          */}
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <span className="text-[13px] text-secondary">
+              Portions this makes
+            </span>
+            <span className="flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label="Fewer portions"
+                onClick={() => setServings((v) => Math.max(1, v - 1))}
+                className="btn-secondary pressable flex h-9 w-9 items-center justify-center rounded-full"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <span className="metric w-8 text-center text-[15px] font-[650] text-foreground">
+                {servings}
+              </span>
+              <button
+                type="button"
+                aria-label="More portions"
+                onClick={() => setServings((v) => Math.min(20, v + 1))}
+                className="btn-secondary pressable flex h-9 w-9 items-center justify-center rounded-full"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted">
+            {servings > 1
+              ? `Enter quantities for the whole batch. Logging one portion records a ${fractionLabel(servings)} of each ingredient — including the cooking oil.`
+              : "Leave at 1 when the quantities below are already one serving."}
+          </p>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5">
-          <SectionLabel>Ingredients</SectionLabel>
+          <SectionLabel>
+            {servings > 1 ? "Ingredients (whole batch)" : "Ingredients"}
+          </SectionLabel>
           <div className="mt-2 space-y-1.5">
             {items.map((item, i) => {
               const food = foods.find((f) => f.id === item.foodId);
@@ -519,9 +624,22 @@ function TemplateEditor({
 }
 
 function formatQty(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+  if (Number.isInteger(n)) return String(n);
+  return String(Math.round(n * 100) / 100);
 }
 
 function round2(n: number): number {
   return Math.round(n * 2) / 2;
+}
+
+function fractionLabel(servings: number): string {
+  if (servings === 2) return "half";
+  if (servings === 3) return "third";
+  if (servings === 4) return "quarter";
+  return `1/${servings}`;
+}
+
+/** Quarter steps — a quarter tablespoon of oil is a real portion. */
+function round4(n: number): number {
+  return Math.round(n * 4) / 4;
 }

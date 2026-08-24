@@ -3,12 +3,20 @@
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
+import { NumberField } from "@/components/ui/number-field";
 import { computeLogMacros, formatCalories, formatMacro } from "@/lib/nutrition";
 import { MEAL_LABELS, type MealCategory } from "@/lib/constants";
 import type { Food } from "@/types";
 
-/** Half-serving steps — half a scoop and half a container are real portions. */
-const STEP = 0.5;
+/**
+ * Quarter-serving steps.
+ *
+ * Half was enough for scoops and containers, but not for cooking oil: a
+ * tablespoon split across four bowls is a quarter tablespoon each, and that
+ * quantity has to be reachable. The number is also directly editable for
+ * anything finer.
+ */
+const STEP = 0.25;
 const MAX = 20;
 
 export function QuantitySheet({
@@ -67,9 +75,13 @@ export function QuantitySheet({
             <Minus className="h-5 w-5" strokeWidth={2.5} />
           </button>
 
-          <span className="metric min-w-[72px] text-center text-[36px] font-[650] leading-none text-foreground">
-            {formatQuantity(quantity)}
-          </span>
+          <NumberField
+            value={quantity}
+            onChange={(v) => setQuantity(Math.max(0, v))}
+            step="0.25"
+            ariaLabel="Quantity"
+            className="metric min-w-[92px] bg-transparent text-center text-[36px] font-[650] leading-none text-foreground outline-none"
+          />
 
           <button
             type="button"
@@ -106,11 +118,7 @@ export function QuantitySheet({
   );
 }
 
-/** Keep halves clean — floating point turns 1.5-0.5 into 0.9999999 otherwise. */
+/** Keep quarters clean — floating point turns 0.75-0.25 into 0.4999999 otherwise. */
 function roundStep(n: number): number {
-  return Math.round(n * 2) / 2;
-}
-
-function formatQuantity(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+  return Math.round(n * 4) / 4;
 }

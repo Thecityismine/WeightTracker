@@ -51,6 +51,16 @@ export type DayRow = {
   weight: number | null;
 };
 
+/** A food's contribution to the month, for the top-contributors tables. */
+export type Contributor = {
+  name: string;
+  entries: number;
+  calories: number;
+  sodiumMg: number | null;
+  saturatedFat: number | null;
+  sugar: number | null;
+};
+
 export type MonthlyReport = {
   from: DateKey;
   to: DateKey;
@@ -84,6 +94,17 @@ export type MonthlyReport = {
   proteinTargetDays: number;
 
   days: DayRow[];
+
+  /**
+   * Biggest sodium sources, and the biggest sources overall.
+   *
+   * A clinician asking "where is the sodium coming from" wants the answer by
+   * name, not a single monthly figure. Seasoning blends and salt dominate this
+   * list while contributing almost no calories, which is exactly the pattern
+   * that a calorie-only log hides.
+   */
+  topSodium: Contributor[];
+  topCalories: Contributor[];
 };
 
 export function buildMonthlyReport(
@@ -170,6 +191,33 @@ export function buildMonthlyReport(
   const start = withWeight.length ? withWeight[0].weight : null;
   const end = withWeight.length ? withWeight[withWeight.length - 1].weight : null;
 
+  const byFood = new Map<string, Contributor>();
+  for (const l of inRange) {
+    const key = l.nameSnapshot;
+    const c: Contributor = byFood.get(key) ?? {
+      name: key,
+      entries: 0,
+      calories: 0,
+      sodiumMg: null,
+      saturatedFat: null,
+      sugar: null,
+    };
+    c.entries += 1;
+    c.calories += l.caloriesSnapshot;
+    if (l.sodiumMgSnapshot != null) {
+      c.sodiumMg = (c.sodiumMg ?? 0) + l.sodiumMgSnapshot;
+    }
+    if (l.saturatedFatSnapshot != null) {
+      c.saturatedFat = (c.saturatedFat ?? 0) + l.saturatedFatSnapshot;
+    }
+    if (l.sugarSnapshot != null) {
+      c.sugar = (c.sugar ?? 0) + l.sugarSnapshot;
+    }
+    byFood.set(key, c);
+  }
+
+  const contributors = [...byFood.values()];
+
   return {
     from,
     to,
@@ -207,6 +255,14 @@ export function buildMonthlyReport(
     ).length,
 
     days,
+
+    topSodium: contributors
+      .filter((c) => (c.sodiumMg ?? 0) > 0)
+      .sort((a, b) => (b.sodiumMg ?? 0) - (a.sodiumMg ?? 0))
+      .slice(0, 10),
+    topCalories: [...contributors]
+      .sort((a, b) => b.calories - a.calories)
+      .slice(0, 10),
   };
 }
 

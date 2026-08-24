@@ -210,6 +210,15 @@ export type MealTemplate = {
   userId: string;
   name: string;
   defaultMealCategory: MealCategory;
+  /**
+   * How many portions the listed quantities make.
+   *
+   * 1 means the ingredients are already per-serving — the original template
+   * behaviour. Above 1 makes it a recipe: quantities describe the whole batch,
+   * and logging a portion divides by this. That is what lets a tablespoon of
+   * oil cook four bowls without charging a tablespoon to each.
+   */
+  servingsPrepared: number;
   createdAt: string;
 };
 

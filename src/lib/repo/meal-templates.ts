@@ -7,7 +7,7 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { addLogs } from "./food-logs";
-import { computeLogMacros, sumMacros } from "@/lib/nutrition";
+import { computeLogMacros, portionQuantity, sumMacros } from "@/lib/nutrition";
 import type { MealCategory } from "@/lib/constants";
 import type { DateKey } from "@/lib/dates";
 import type { Food, MacroSet, MacroTargets, MealTemplate } from "@/types";
@@ -32,12 +32,14 @@ export async function createTemplate(
   name: string,
   defaultMealCategory: MealCategory,
   items: TemplateItem[],
+  servingsPrepared = 1,
 ): Promise<string> {
   const ref = await addDoc(collection(getDb(), TEMPLATES), {
     userId,
     name: name.trim(),
     defaultMealCategory,
     items,
+    servingsPrepared,
     createdAt: new Date().toISOString(),
   });
   return ref.id;
@@ -45,7 +47,12 @@ export async function createTemplate(
 
 export async function updateTemplate(
   templateId: string,
-  patch: Partial<Pick<TemplateDoc, "name" | "defaultMealCategory" | "items">>,
+  patch: Partial<
+    Pick<
+      TemplateDoc,
+      "name" | "defaultMealCategory" | "items" | "servingsPrepared"
+    >
+  >,
 ): Promise<void> {
   await updateDoc(doc(getDb(), TEMPLATES, templateId), patch);
 }
@@ -68,10 +75,13 @@ export async function applyTemplate(
   date: DateKey,
   meal: MealCategory,
   targets: MacroTargets,
+  portionsEaten = 1,
 ): Promise<{ added: number; missing: number }> {
   const entries: { food: Food; quantity: number; mealCategory: MealCategory }[] =
     [];
   let missing = 0;
+
+  const servings = template.servingsPrepared ?? 1;
 
   for (const item of template.items) {
     const food = foods.find((f) => f.id === item.foodId);
@@ -79,22 +89,37 @@ export async function applyTemplate(
       missing++;
       continue;
     }
-    entries.push({ food, quantity: item.quantity, mealCategory: meal });
+    entries.push({
+      food,
+      quantity: portionQuantity(item.quantity, portionsEaten, servings),
+      mealCategory: meal,
+    });
   }
 
   const added = await addLogs(userId, entries, date, targets);
   return { added, missing };
 }
 
-/** Totals for a template, computed from the foods it currently points at. */
+/**
+ * Totals for a template.
+ *
+ * `perPortion` defaults to true because that is the number a person eating one
+ * bowl actually wants; `false` gives the whole batch, which is what the recipe
+ * editor shows while you are building it.
+ */
 export function templateMacros(
   template: TemplateDoc,
   foods: Food[],
+  perPortion = true,
 ): MacroSet {
+  const servings = template.servingsPrepared ?? 1;
+  const divisor = perPortion ? servings : 1;
+
   return sumMacros(
     template.items.map((item) => {
       const food = foods.find((f) => f.id === item.foodId);
-      return food ? computeLogMacros(food, item.quantity) : {};
+      if (!food) return {};
+      return computeLogMacros(food, item.quantity / divisor);
     }),
   );
 }
