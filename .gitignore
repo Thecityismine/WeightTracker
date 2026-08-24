@@ -20,6 +20,15 @@ dist/
 .firebase/
 firebase-debug.log
 
+# credentials / secrets dropped in as plain text — never commit
+*credential*
+*secret*
+*.key
+keys.txt
+config.txt
+firebase.txt
+accounts.txt
+
 # vercel
 .vercel
 

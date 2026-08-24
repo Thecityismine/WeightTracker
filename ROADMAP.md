@@ -16,17 +16,35 @@
 | Area | Choice |
 | --- | --- |
 | Framework | Next.js (App Router) + TypeScript |
-| Styling | Tailwind CSS + shadcn/ui |
+| Styling | Tailwind CSS + shadcn/ui, dark theme per [DESIGN.md](DESIGN.md) |
 | Database | Firebase Firestore |
 | File storage | Firebase Storage (nutrition-label photos) |
 | Hosting | Vercel |
-| Auth | **None** — no login screen. All Firestore access goes through Next.js server routes using `firebase-admin`; client-side Firestore rules are deny-all |
+| Auth | **Firebase Auth, email + password.** One account — yours. Login screen, no signup flow |
 | AI | Claude (Anthropic) — `claude-opus-5` for label vision + coaching, `claude-sonnet-5` for routine lookups |
 | Nutrition source | USDA FoodData Central API (server-side only) |
 | Charts | Recharts |
 | Units | Weight in **pounds**, food weights in **grams** |
 
-**Note on "no auth":** there is no login screen, as chosen. Firestore rules deny all direct client access so bots cannot scrape or wipe the database — reads and writes happen only through this app's own server routes. The remaining exposure is that anyone who has the Vercel URL can use the app. Phase 10 includes an optional one-line passphrase gate (single env var, no user accounts) that can be switched on later without touching the data model.
+### Auth architecture
+
+One real account, locked down four ways:
+
+1. **Email + password only.** No Google, no signup screen, no password-reset self-service. The account is created once by hand in the Firebase console.
+2. **Firestore rules pin the UID.** `allow read, write: if request.auth.uid == "<YOUR_UID>";` — even if someone somehow creates a second Firebase account, it can read and write nothing.
+3. **Disable public sign-up** in the Firebase console (Authentication → Settings → *User actions* → uncheck "Enable create"). Otherwise the email/password provider will happily accept new registrations.
+4. **Server routes verify the ID token.** Every `/api/*` route calls `verifyIdToken` and checks the UID against `ALLOWED_UID` before spending a Claude or USDA call.
+
+Data reads and writes go through the **Firebase client SDK** with those rules enforcing ownership — that buys offline persistence and real-time updates for free on mobile. Server routes exist only where a secret key is involved (Claude, USDA) or where a write must be trusted.
+
+**Session:** persistence set to `browserLocalPersistence`, so logging in once on your phone keeps you logged in indefinitely. The login screen should be the rare exception, not a daily toll.
+
+### Design system
+
+[DESIGN.md](DESIGN.md) is the source of truth for every visual decision — colors, typography, spacing, component anatomy, motion. Build against the tokens, never hardcode a hex value in a component. Two rules that are easy to break and worth repeating:
+
+- **Blue is for active states, primary actions, progress, and important numbers.** Nothing else. Blue on everything kills its impact.
+- **Green means a target was reached.** It is never decoration.
 
 ---
 
@@ -69,7 +87,7 @@ Every AI-derived food carries a verification status and, if estimated, a visible
 
 ## Data model (Firestore)
 
-Top-level collections. Every document carries `userId` (hardcoded `"me"` in V1) so nothing needs rewriting if this ever becomes multi-user.
+Top-level collections. Every document carries `userId` — the Firebase Auth UID — which the security rules match against `request.auth.uid`. That is both the ownership check and the multi-user path if this ever opens up.
 
 ```
 profile/{userId}
@@ -136,34 +154,69 @@ Each phase ends deployable. Ship it, use it for a day, then start the next one.
 
 ---
 
-## Phase 0 — Foundation and deploy pipeline
+## Phase 0 — Foundation, auth, and deploy pipeline
 
-**Goal:** an empty app live on Vercel, talking to Firestore.
+**Goal:** a locked, correctly themed empty app live on Vercel, talking to Firestore.
+
+### Scaffold
 
 - [ ] `npx create-next-app@latest` — TypeScript, Tailwind, App Router, `src/` dir
-- [ ] Install: `firebase-admin`, `@anthropic-ai/sdk`, `recharts`, `date-fns`, `zod`, `lucide-react`
+- [ ] Install: `firebase`, `firebase-admin`, `@anthropic-ai/sdk`, `recharts`, `date-fns`, `zod`, `lucide-react`
 - [ ] Init shadcn/ui; add button, card, dialog, drawer, input, tabs, progress, select, sheet, toast
-- [ ] Create the Firebase project, enable Firestore + Storage
-- [ ] Generate a service-account key; store as env vars (never commit the JSON)
-- [ ] `firestore.rules` — deny all client reads and writes
+- [ ] `.env.local` + `.env.example`; `.gitignore` covering `.env*`, `*serviceAccount*.json`, and the credentials text file
+
+### Firebase and auth
+
+- [ ] Create the Firebase project; enable Firestore and Storage
+- [ ] Enable the **Email/Password** provider; **disable public sign-up** (Authentication → Settings → User actions)
+- [ ] Create your single account by hand in the console; copy the UID
+- [ ] `firestore.rules` — `allow read, write: if request.auth.uid == "<YOUR_UID>";` on every collection
+- [ ] `storage.rules` — same UID pin for label photos
+- [ ] Deploy rules: `firebase deploy --only firestore:rules,storage`
+- [ ] `lib/firebase.ts` — client SDK init, `browserLocalPersistence`, offline persistence enabled
 - [ ] `lib/firebase-admin.ts` — singleton Admin SDK init that survives hot reload
-- [ ] `.env.local` + `.env.example`; `.gitignore` covering `.env*` and `*serviceAccount*.json`
-- [ ] Bottom nav shell: Today · Calendar · Progress · Foods · Settings (five routes, empty pages)
-- [ ] Mobile viewport meta, safe-area insets, dark theme
+- [ ] `AuthProvider` context + `useAuth()` hook; loading state that does not flash the login screen on refresh
+- [ ] Login screen: email, password, "stay signed in", one clear error message. No signup link, no social buttons — styled per [DESIGN.md](DESIGN.md) (obsidian background, blue-gradient primary button)
+- [ ] Route guard — unauthenticated hits any page, gets the login screen
+- [ ] Sign out lives in Settings, nowhere else
+- [ ] `lib/api-auth.ts` — `verifyIdToken` + `ALLOWED_UID` check, wrapped around every `/api/*` route
+
+### Design foundation
+
+- [ ] Paste the [DESIGN.md](DESIGN.md) tokens into `globals.css` under `:root`
+- [ ] Map tokens into `tailwind.config.ts` so classes read `bg-surface`, `text-muted`, `text-protein`
+- [ ] Geist Sans + Geist Mono via `next/font`; `font-variant-numeric: tabular-nums` on every metric
+- [ ] Body background: the blue radial glow over `#050608`
+- [ ] Shared `<Card>` primitive — graphite surface, hairline border, 16px radius, the specified inset highlight, no heavy shadow
+- [ ] Bottom nav: Today · Calendar · **+** · Progress · Settings, with the elevated 52px blue center button
+- [ ] Mobile viewport meta, safe-area insets, `overscroll-behavior: none`
+
+### Ship
+
 - [ ] First commit, push to GitHub, connect Vercel, set env vars, deploy
 
 **Env vars**
 
 ```
+# client (safe to expose — rules do the enforcing)
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+
+# server only
 FIREBASE_PROJECT_ID
 FIREBASE_CLIENT_EMAIL
 FIREBASE_PRIVATE_KEY
 FIREBASE_STORAGE_BUCKET
+ALLOWED_UID
 ANTHROPIC_API_KEY
 USDA_API_KEY
 ```
 
-**Done when:** the live Vercel URL loads, the bottom nav switches between five pages, and a test server route writes and reads one Firestore document.
+**Done when:** the live Vercel URL shows the login screen, your credentials get in, a refresh keeps you in, the bottom nav moves between five themed pages, and an unauthenticated `curl` against a test Firestore read is rejected by the rules.
 
 ---
 
@@ -192,20 +245,24 @@ USDA_API_KEY
 
 **Goal:** log a full day of food on a phone in under two minutes. This is the app.
 
-- [ ] Daily header: date, current weight, streak, days since start, on-target status
-- [ ] Three macro counters — calories, protein, fat — with progress rings
-- [ ] Remaining line: *"490 calories and 12 g protein remaining today."*
+- [ ] Header: greeting, date, current weight, day count — weight secondary, calories dominant
+- [ ] **One** full-width calorie card: 40–48px number, muted target beneath, blue gradient bar with the glow at the leading edge only, percentage, remaining
+- [ ] Bar transitions blue → green when the target is reached. Never the word "over"
+- [ ] Two half-width macro cards below: protein (violet bar), fat (gold bar), each showing `used / target` and remaining
 - [ ] Surplus/deficit estimate against target, plus whether on track to gain
-- [ ] Five collapsible meal sections with per-section totals
-- [ ] Food row: name, quantity, calories, protein — tap to edit quantity in place
-- [ ] Swipe-to-delete or long-press delete, with undo
-- [ ] **Add Food** sheet with four tabs: Recent · Favorites · My Foods · AI Search (last tab stubbed)
+- [ ] Five meal sections as light list groups, not heavy containers: muted uppercase title, total aligned right, hairline divider
+- [ ] Collapsed state: `LUNCH   901 kcal • 56g protein ›`
+- [ ] Empty dinner state picks up an amber accent if the target is unmet by evening
+- [ ] Food row: name white, portion muted below it, calories and protein right-aligned; tap to change quantity
+- [ ] Swipe left to edit or delete, with undo
+- [ ] **Add Food** full-height bottom sheet, four tabs — Recent · Favorites · My Foods · AI Search (last stubbed) — active tab is blue text with a thin underline, no pill
 - [ ] Recent sorted by frequency and recency; Favorites from `isFavorite`
-- [ ] Quantity control `− 2 +` with a live total preview before saving
+- [ ] Quantity sheet: `− 2 +` controls at minimum 44 × 44px, live total, full-width blue gradient "Add to Breakfast"
 - [ ] Date switcher — log yesterday without leaving the screen
 - [ ] Optimistic UI: a logged food appears instantly and reconciles after the write
+- [ ] Motion: 100ms press, 300ms progress, 250ms sheet, checkmark + haptic on add
 
-**Done when:** a full day of eating is logged on a phone without touching a keyboard, and the counters match a hand calculation exactly.
+**Done when:** a full day of eating is logged on a phone without touching a keyboard, a repeat food takes **three taps or fewer**, and the counters match a hand calculation exactly.
 
 ---
 
@@ -213,7 +270,10 @@ USDA_API_KEY
 
 **Goal:** own the ~40 foods actually eaten.
 
+> **Navigation note:** the design's bottom nav is Today · Calendar · **+** · Progress · Settings — the center button opens quick food selection, so Foods has no nav slot of its own. Reach the foods database from **Settings → Nutrition database → Manage foods** and from the **My Foods** tab of the Add Food sheet. Route stays `/foods`.
+
 - [ ] Foods list: search, filter by category, favorites toggle, sort by most-used
+- [ ] Source dots on every row — green label-verified, blue USDA, gray user-entered, amber AI-estimated
 - [ ] Manual create/edit form covering every field in the schema
 - [ ] Verification badges — Label Verified · USDA Verified · User Entered · AI Estimated
 - [ ] AI Estimated badge shows: *"Estimated nutrition. Confirm the serving size or replace it with label data when available."*
@@ -246,7 +306,8 @@ USDA_API_KEY
 
 **Goal:** see consistency at a glance.
 
-- [ ] Month grid; each cell shows the day, calories, protein, and status color
+- [ ] Month grid on black; each cell shows the day, calories, `132P`, and a **status dot or thin bottom line** — never a filled bright cell
+- [ ] Selected date: translucent blue fill, blue border, soft outer glow
 - [ ] Previous / next month, jump to today
 - [ ] Tap a date to open that day's full log
 - [ ] Weekly summary row beside or beneath each week
@@ -263,10 +324,12 @@ USDA_API_KEY
 **Goal:** the trend, not the noise.
 
 - [ ] Progress header: starting weight, current seven-day average (the largest number on the page), goal weight, pounds gained, pounds remaining, percent to goal, estimated goal date
-- [ ] Chart 1 — daily weight with the seven-day average overlaid
-- [ ] Chart 2 — daily calories against the target line
-- [ ] Chart 3 — daily protein against the target line
+- [ ] Weight progress line: starting left, goal right, glowing blue position marker that turns green at goal
+- [ ] Chart 1 — daily weight (muted gray) with the seven-day average (electric blue) overlaid
+- [ ] Chart 2 — daily calories against a thin horizontal target line
+- [ ] Chart 3 — daily protein in violet against its target line
 - [ ] Chart 4 — weekly calorie intake versus weekly weight change
+- [ ] Chart surfaces carry faint horizontal grid lines only — no grid boxes, no vertical rules
 - [ ] Weekly summary table: average calories, protein, and fat; calorie-target days (5 of 7); protein-target days; starting, ending, and average weekly weight; weekly change
 - [ ] Plain-language interpretation generated from those numbers
 - [ ] Stall detection: no weight change across two full weeks → suggest +150 cal/day
@@ -313,6 +376,9 @@ USDA_API_KEY
 
 **Source priority, enforced in code:** label photo → branded USDA → generic USDA → AI estimate
 
+- [ ] Floating circular assistant button, bottom right — black center, thin animated blue border, sparkle icon, no mascot
+- [ ] Result card: name, serving, macros, source, confidence, `[ Edit serving ] [ Save food ]`
+- [ ] Estimated results carry the amber strip: *"Nutrition may vary by preparation. Confirm the serving before saving."*
 - [ ] `app/api/ai/label-scan` — photo in, structured macros out (Claude vision + tool-use JSON schema)
 - [ ] `app/api/ai/lookup` — natural language in ("medium grilled pork chop, about 5 oz cooked"), candidate food, serving, and confidence out
 - [ ] Mandatory review screen before anything saves, with every field editable
@@ -328,11 +394,11 @@ USDA_API_KEY
 
 ## Phase 10 — Polish
 
-- [ ] PWA manifest and icons — installs to the home screen, opens on Today
+- [ ] PWA manifest and icons — installs to the home screen, opens on Today, black splash
 - [ ] Offline read of today's log; queue writes made while offline
-- [ ] Loading skeletons, empty states, error toasts
-- [ ] Haptics on log and delete
-- [ ] Optional passphrase gate (single env var, no accounts)
+- [ ] Loading skeletons, empty states, error toasts — all on theme
+- [ ] Haptics on log and delete; weight-milestone blue-to-green animation
+- [ ] Design audit against [DESIGN.md](DESIGN.md): no stray hex values, blue confined to active states and key numbers, green only on reached targets, nothing pulsing
 - [ ] Data export to JSON/CSV
 - [ ] Lighthouse mobile pass; target a sub-second Today screen load
 
@@ -349,6 +415,7 @@ Barcode scanning · Apple Health · smart scale · workout tracking · recipe bu
 - One phase per branch, merged when its **Done when** is satisfied.
 - Every phase ends deployed to Vercel and used for at least one real day before the next begins.
 - Nutrition math changes require a test.
+- Colors, spacing, and type come from the tokens in [DESIGN.md](DESIGN.md). A hardcoded hex in a component is a bug.
 - If a phase drags, ship the useful half and move the remainder to the backlog.
 
 **The best V1 is not a MyFitnessPal replacement.** It is a fast personal tracker holding the 30–50 foods actually eaten, with AI available when something unfamiliar shows up.
