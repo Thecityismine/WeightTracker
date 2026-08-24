@@ -15,8 +15,8 @@
 
 | Area | Choice |
 | --- | --- |
-| Framework | Next.js (App Router) + TypeScript |
-| Styling | Tailwind CSS + shadcn/ui, dark theme per [DESIGN.md](DESIGN.md) |
+| Framework | Next.js 16 (App Router) + React 19 + TypeScript |
+| Styling | Tailwind CSS v4 (CSS-first `@theme`), hand-built primitives, dark theme per [DESIGN.md](DESIGN.md) |
 | Database | Firebase Firestore |
 | File storage | Firebase Storage (nutrition-label photos) |
 | Hosting | Vercel |
@@ -160,40 +160,53 @@ Each phase ends deployable. Ship it, use it for a day, then start the next one.
 
 ### Scaffold
 
-- [ ] `npx create-next-app@latest` — TypeScript, Tailwind, App Router, `src/` dir
-- [ ] Install: `firebase`, `firebase-admin`, `@anthropic-ai/sdk`, `recharts`, `date-fns`, `zod`, `lucide-react`
-- [ ] Init shadcn/ui; add button, card, dialog, drawer, input, tabs, progress, select, sheet, toast
-- [ ] `.env.local` + `.env.example`; `.gitignore` covering `.env*`, `*serviceAccount*.json`, and the credentials text file
+- [x] `create-next-app` — Next 16.3.2, React 19.2, TypeScript, Tailwind **v4**, App Router, `src/`
+- [x] Install: `firebase`, `firebase-admin`, `@anthropic-ai/sdk`, `recharts`, `date-fns`, `zod`, `lucide-react`, `clsx`, `tailwind-merge`
+- [x] ~~shadcn/ui~~ — **skipped deliberately.** Its defaults fight this theme; every primitive would need overriding anyway. Primitives are hand-built against the tokens instead. Revisit only if a genuinely complex component (combobox, date picker) shows up
+- [x] `.env.local` + `.env.example`; `.gitignore` covering `.env*`, `*serviceAccount*.json`, `*_keys*`
+- [x] `turbopack.root` pinned in `next.config.ts` (a stray lockfile in the home dir was hijacking the workspace root)
 
 ### Firebase and auth
 
-- [ ] Create the Firebase project; enable Firestore and Storage
-- [ ] Enable the **Email/Password** provider; **disable public sign-up** (Authentication → Settings → User actions)
-- [ ] Create your single account by hand in the console; copy the UID
-- [ ] `firestore.rules` — `allow read, write: if request.auth.uid == "<YOUR_UID>";` on every collection
-- [ ] `storage.rules` — same UID pin for label photos
-- [ ] Deploy rules: `firebase deploy --only firestore:rules,storage`
-- [ ] `lib/firebase.ts` — client SDK init, `browserLocalPersistence`, offline persistence enabled
-- [ ] `lib/firebase-admin.ts` — singleton Admin SDK init that survives hot reload
-- [ ] `AuthProvider` context + `useAuth()` hook; loading state that does not flash the login screen on refresh
-- [ ] Login screen: email, password, "stay signed in", one clear error message. No signup link, no social buttons — styled per [DESIGN.md](DESIGN.md) (obsidian background, blue-gradient primary button)
-- [ ] Route guard — unauthenticated hits any page, gets the login screen
-- [ ] Sign out lives in Settings, nowhere else
-- [ ] `lib/api-auth.ts` — `verifyIdToken` + `ALLOWED_UID` check, wrapped around every `/api/*` route
+- [x] Firebase project `weighttracker-76f46` created; **Storage enabled**
+- [ ] **Enable Firestore** — Console → Firestore Database → Create database *(you)*
+- [ ] Enable the **Email/Password** provider; **disable public sign-up** *(you)*
+- [ ] Create the single account by hand; copy the UID *(you)*
+- [x] `firestore.rules` — every collection pinned to `ownerUid()`, catch-all deny at the bottom
+- [x] `storage.rules` — same UID pin, images only, 10 MB ceiling
+- [x] `firestore.indexes.json` — composite indexes for the log, food and weight queries
+- [ ] Paste the UID into both rules files, then `firebase deploy --only firestore:rules,firestore:indexes,storage`
+- [x] `lib/firebase.ts` — client SDK, `browserLocalPersistence`, persistent offline cache
+- [x] `lib/firebase-admin.ts` — singleton Admin SDK that survives hot reload, clear error when unconfigured
+- [x] `lib/auth-context.tsx` — `AuthProvider` + `useAuth()`, exposes `getToken()` for API calls
+- [x] Login screen — email, password, single vague error, no signup link, no social buttons
+- [x] `AuthGate` — restoring / signed-out / signed-in; never flashes login on refresh
+- [x] Sign out lives in Settings, nowhere else
+- [x] `lib/api-auth.ts` — `requireOwner()` verifies the ID token against `ALLOWED_UID`, **fails closed** if the var is unset
 
 ### Design foundation
 
-- [ ] Paste the [DESIGN.md](DESIGN.md) tokens into `globals.css` under `:root`
-- [ ] Map tokens into `tailwind.config.ts` so classes read `bg-surface`, `text-muted`, `text-protein`
-- [ ] Geist Sans + Geist Mono via `next/font`; `font-variant-numeric: tabular-nums` on every metric
-- [ ] Body background: the blue radial glow over `#050608`
-- [ ] Shared `<Card>` primitive — graphite surface, hairline border, 16px radius, the specified inset highlight, no heavy shadow
-- [ ] Bottom nav: Today · Calendar · **+** · Progress · Settings, with the elevated 52px blue center button
-- [ ] Mobile viewport meta, safe-area insets, `overscroll-behavior: none`
+- [x] Tokens in `globals.css` under `:root`, exposed to Tailwind v4 via `@theme inline` (v4 is CSS-first — there is no `tailwind.config.ts`)
+- [x] Utility classes: `.card`, `.progress-*`, `.btn-*`, `.input`, `.metric`, `.label-metric`, `.pressable`
+- [x] Geist Sans + Geist Mono via `next/font`; `tabular-nums` on every metric
+- [x] Body background: blue radial glow over `#050608`, fixed attachment
+- [x] `<Card>`, `<SectionLabel>`, `<PageHeader>` primitives
+- [x] Bottom nav: Today · Calendar · **+** · Progress · Settings, elevated 52px blue center button, blue indicator line on the active item
+- [x] Viewport meta, `viewportFit: cover`, safe-area insets, `overscroll-behavior: none`, no pinch-zoom
+- [x] `prefers-reduced-motion` respected
 
 ### Ship
 
-- [ ] First commit, push to GitHub, connect Vercel, set env vars, deploy
+- [x] Committed and pushed to GitHub
+- [ ] `vercel link`, set env vars for Preview + Production, deploy *(needs the service-account key)*
+
+### Verified
+
+- [x] `npm run build` — clean, 6 static routes, no warnings
+- [x] `npx tsc --noEmit` — clean
+- [x] `npm run lint` — clean
+- [x] Dev server boots, `/` returns 200, no console errors
+- [ ] Login actually authenticates *(blocked until the account exists)*
 
 **Env vars**
 

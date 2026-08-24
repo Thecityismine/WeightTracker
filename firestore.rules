@@ -1,0 +1,78 @@
+rules_version = '2';
+
+// Muscle Gain Food Tracker — single-owner rules.
+//
+// Every collection is pinned to one Firebase Auth UID. Even if a second
+// account somehow gets created, it can read and write nothing.
+//
+// SETUP: replace the placeholder below with your UID from
+// Firebase Console > Authentication > Users > User UID.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function ownerUid() {
+      return 'PASTE_YOUR_FIREBASE_AUTH_UID_HERE';
+    }
+
+    function isOwner() {
+      return request.auth != null && request.auth.uid == ownerUid();
+    }
+
+    // Documents must also carry the owner's uid, so a compromised client
+    // cannot write records attributed to anyone else.
+    function ownsPayload() {
+      return request.resource.data.userId == ownerUid();
+    }
+
+    match /profile/{userId} {
+      allow read: if isOwner() && userId == ownerUid();
+      allow write: if isOwner() && userId == ownerUid();
+    }
+
+    match /foods/{foodId} {
+      allow read: if isOwner();
+      allow create, update: if isOwner() && ownsPayload();
+      allow delete: if isOwner();
+    }
+
+    match /foodLogs/{logId} {
+      allow read: if isOwner();
+      allow create, update: if isOwner() && ownsPayload();
+      allow delete: if isOwner();
+    }
+
+    match /dailyTotals/{date} {
+      allow read: if isOwner();
+      allow create, update: if isOwner() && ownsPayload();
+      allow delete: if isOwner();
+    }
+
+    match /weightLogs/{date} {
+      allow read: if isOwner();
+      allow create, update: if isOwner() && ownsPayload();
+      allow delete: if isOwner();
+    }
+
+    match /mealTemplates/{templateId} {
+      allow read: if isOwner();
+      allow create, update: if isOwner() && ownsPayload();
+      allow delete: if isOwner();
+
+      match /items/{itemId} {
+        allow read, write: if isOwner();
+      }
+    }
+
+    match /aiFoodSearches/{searchId} {
+      allow read: if isOwner();
+      allow create, update: if isOwner() && ownsPayload();
+      allow delete: if isOwner();
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,229 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Design tokens — source of truth is DESIGN.md.
+   Never hardcode a hex value in a component.
+   --------------------------------------------------------------- */
+:root {
+  --background: #050608;
+  --background-secondary: #090c10;
+  --surface: #10151b;
+  --surface-active: #0b1722;
+  --blue: #00a8ff;
+  --cyan: #29d9ff;
+  --blue-dark: #007ecc;
+  --text-primary: #f4f7fa;
+  --text-secondary: #9aa6b2;
+  --text-muted: #66717d;
+  --border: #202832;
+  --border-active: #007ecc;
+  --success: #2ddb8c;
+  --warning: #ffb547;
+  --danger: #ff5b6e;
+  --protein: #a78bfa;
+  --fat: #f5b942;
+  --carbs: #2dd4bf;
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-sheet: 24px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-surface: var(--surface);
+  --color-surface-active: var(--surface-active);
+  --color-blue: var(--blue);
+  --color-cyan: var(--cyan);
+  --color-blue-dark: var(--blue-dark);
+  --color-foreground: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-hairline: var(--border);
+  --color-hairline-active: var(--border-active);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-protein: var(--protein);
+  --color-fat: var(--fat);
+  --color-carbs: var(--carbs);
+
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-sheet: 24px;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ---------------------------------------------------------------
+   Base
+   --------------------------------------------------------------- */
+html {
+  color-scheme: dark;
+  /* Never bounce — this is an app, not a document. */
+  overscroll-behavior: none;
+}
+
+body {
+  /* Subtle blue radial glow near the top, over near-black. */
+  background:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(0, 168, 255, 0.12),
+      transparent 32%
+    ),
+    var(--background);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Metrics must not shift width as they tick up. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.metric {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Small uppercase metric labels — CALORIES, PROTEIN, FAT */
+.label-metric {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------
+   Surfaces
+   --------------------------------------------------------------- */
+.card {
+  background: rgba(16, 21, 27, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(16px);
+}
+
+.card-active {
+  background: var(--surface-active);
+  border-color: rgba(0, 168, 255, 0.32);
+}
+
+/* ---------------------------------------------------------------
+   Progress
+   --------------------------------------------------------------- */
+.progress-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 300ms ease-out, background 500ms ease;
+}
+
+/* Blue glow at the leading edge only. */
+.progress-calories {
+  background: linear-gradient(90deg, #007ecc, #00a8ff, #29d9ff);
+  box-shadow: 0 0 16px rgba(0, 168, 255, 0.38);
+}
+
+/* Target reached — blue gives way to green. */
+.progress-complete {
+  background: linear-gradient(90deg, #1fa873, #2ddb8c);
+  box-shadow: 0 0 16px rgba(45, 219, 140, 0.34);
+}
+
+.progress-protein {
+  background: linear-gradient(90deg, #7c5cf0, #a78bfa);
+}
+
+.progress-fat {
+  background: linear-gradient(90deg, #d99a24, #f5b942);
+}
+
+/* ---------------------------------------------------------------
+   Buttons
+   --------------------------------------------------------------- */
+.btn-primary {
+  background: linear-gradient(135deg, #007ecc, #00a8ff);
+  color: #ffffff;
+  border: 1px solid rgba(41, 217, 255, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 168, 255, 0.22);
+  border-radius: var(--radius-control);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid #28323d;
+  border-radius: var(--radius-control);
+}
+
+.btn-destructive {
+  background: rgba(255, 91, 110, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(255, 91, 110, 0.3);
+  border-radius: var(--radius-control);
+}
+
+/* 100ms press feedback, per DESIGN.md motion spec. */
+.pressable {
+  transition: transform 100ms ease, opacity 100ms ease;
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* ---------------------------------------------------------------
+   Inputs
+   --------------------------------------------------------------- */
+.input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.12);
+}
+
+/* ---------------------------------------------------------------
+   Safe areas — the bottom nav must clear the home indicator.
+   --------------------------------------------------------------- */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

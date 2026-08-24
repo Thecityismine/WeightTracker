@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Nutrition-label photos. Same single-owner pin as Firestore.
+//
+// SETUP: replace the placeholder with your UID from
+// Firebase Console > Authentication > Users > User UID.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function ownerUid() {
+      return 'PASTE_YOUR_FIREBASE_AUTH_UID_HERE';
+    }
+
+    function isOwner() {
+      return request.auth != null && request.auth.uid == ownerUid();
+    }
+
+    // Label photos live under labels/{uid}/...
+    match /labels/{userId}/{allPaths=**} {
+      allow read: if isOwner() && userId == ownerUid();
+
+      // Images only, 10 MB ceiling — a phone photo of a label is well under.
+      allow write: if isOwner()
+        && userId == ownerUid()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+
+      allow delete: if isOwner() && userId == ownerUid();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

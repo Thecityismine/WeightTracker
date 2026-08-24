@@ -10,14 +10,10 @@ The client-side Firebase config is already wired into `.env.local`. Six things s
 
 Console → **Build → Firestore Database → Create database**
 
-- Start in **production mode** (rules get replaced in Phase 0 anyway)
+- Start in **production mode** (the repo's rules replace the defaults in step 7)
 - Location: `nam5 (us-central)` unless you have a reason otherwise — it cannot be changed later
 
-## 2. Enable Storage
-
-Console → **Build → Storage → Get started**
-
-Needed for nutrition-label photos. Same location as Firestore.
+## 2. ~~Enable Storage~~ ✅ done
 
 ## 3. Turn on Email/Password auth and create your account
 
@@ -52,6 +48,32 @@ Used for label scanning, natural-language food lookup, and the weekly coaching s
 https://fdc.nal.usda.gov/api-key-signup — free, arrives by email in seconds → `USDA_API_KEY`
 
 Not needed until Phase 8.
+
+## 7. Deploy the security rules
+
+`firestore.rules` and `storage.rules` are written and committed, but both carry a placeholder where your UID goes. Until it's replaced, **the rules deny everything** — which is the safe failure direction, but nothing will work.
+
+1. Open `firestore.rules` and `storage.rules`
+2. Replace `PASTE_YOUR_FIREBASE_AUTH_UID_HERE` in both with the UID from step 3
+3. Deploy:
+
+```bash
+firebase login
+firebase use weighttracker-76f46
+firebase deploy --only firestore:rules,firestore:indexes,storage
+```
+
+Verify in the console that the Rules tab shows your UID and not the placeholder.
+
+---
+
+## Running it locally right now
+
+```bash
+npm run dev        # http://localhost:3000
+```
+
+The login screen renders and the theme is live. Signing in will fail until steps 1–3 are done — there is no account to sign into yet.
 
 ---
 
