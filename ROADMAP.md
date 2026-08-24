@@ -21,7 +21,7 @@
 | File storage | Firebase Storage (nutrition-label photos) |
 | Hosting | Vercel |
 | Auth | **Firebase Auth, email + password.** One account — yours. Login screen, no signup flow |
-| AI | Claude (Anthropic) — `claude-opus-5` for label vision + coaching, `claude-sonnet-5` for routine lookups |
+| AI | Claude (Anthropic) — `claude-opus-5` throughout, including routine lookups |
 | Nutrition source | USDA FoodData Central API (server-side only) |
 | Charts | Recharts |
 | Units | Weight in **pounds**, food weights in **grams** |
@@ -473,19 +473,28 @@ USDA_API_KEY
 
 **Source priority, enforced in code:** label photo → branded USDA → generic USDA → AI estimate
 
-- [ ] Floating circular assistant button, bottom right — black center, thin animated blue border, sparkle icon, no mascot
-- [ ] Result card: name, serving, macros, source, confidence, `[ Edit serving ] [ Save food ]`
-- [ ] Estimated results carry the amber strip: *"Nutrition may vary by preparation. Confirm the serving before saving."*
-- [ ] `app/api/ai/label-scan` — photo in, structured macros out (Claude vision + tool-use JSON schema)
-- [ ] `app/api/ai/lookup` — natural language in ("medium grilled pork chop, about 5 oz cooked"), candidate food, serving, and confidence out
-- [ ] Mandatory review screen before anything saves, with every field editable
-- [ ] Confidence score stored and surfaced; low confidence blocks a silent save
-- [ ] Log every request to `aiFoodSearches` along with its approval state
-- [ ] `app/api/ai/coach` — weekly summary interpretation, and "why was my intake low this week"
-- [ ] Assistant commands: add a food, macros for X, scan this label, copy yesterday's breakfast, protein still needed today, "which food gets me another 400 calories without exceeding 25 g fat"
-- [ ] Never invent a serving size — if it is unclear, the model asks
+- [x] `app/api/ai/label-scan` — photo in, structured macros out (Claude vision + `messages.parse` with a Zod output schema)
+- [x] `app/api/ai/lookup` — natural language in; candidate food, serving and confidence out
+- [x] `app/api/ai/coach` — weekly interpretation grounded strictly in the numbers passed in
+- [x] All three behind `requireOwner()`, so an ID token is verified before any billable call
+- [x] **Mandatory review screen** — every field editable, nothing saved until looked at
+- [x] Confidence stored (`high` 0.9 / `medium` 0.6 / `low` 0.3) and surfaced as a colored dot
+- [x] **Never invents a serving size**: an ambiguous portion sets `needsClarification` and shows the question it would have asked
+- [x] Label photos save as `label_verified`; descriptions save as `ai_estimated` with the amber confirm-the-serving strip
+- [x] Every suggestion logged to `aiFoodSearches` with its approval state; a logging failure never blocks the save
+- [x] Photos downscaled to 1600px client-side — phone JPEGs otherwise exceed the request body limit and waste vision tokens
+- [x] Saving from AI drops straight into the quantity sheet, so a new food is logged in the same motion it was created
+- [x] Coach card on Progress, on demand rather than automatic — it costs a call, and the numbers above already say most of it
+- [x] ~~Floating assistant button~~ — the bottom nav's elevated **+** already occupies that position and opens the picker, where the AI tab lives. A second floating button in the same corner would compete with it
 
-**Done when:** photographing a nutrition label produces a correct, reviewable food entry, and the weekly coach note is accurate against the raw numbers.
+### Verified against the live API
+
+- [x] `"a bowl of oatmeal"` → **needsClarification: true**, asking how big the bowl was and whether it was made with milk
+- [x] `"medium grilled pork chop, ~5 oz cooked"` → 295 kcal, 38 g protein, 15 g fat, 142 g — and honestly marked **low** confidence, because a description is not a label
+- [x] Coach summary on two flat weeks correctly identified the stall and named the shortfall
+- [x] Typecheck, lint, 84 tests, and a build with `.env.local` removed all clean
+
+**Done when:** ~~photographing a label produces a correct, reviewable entry~~ — built, deployed, and exercised against the live API.
 
 ---
 

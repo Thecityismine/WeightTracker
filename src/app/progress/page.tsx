@@ -12,6 +12,7 @@ import {
   type WeeklyPoint,
   type WeightPoint,
 } from "@/components/progress/charts";
+import { CoachCard } from "@/components/progress/coach-card";
 import { useAuth } from "@/lib/auth-context";
 import { useDailyTotals } from "@/lib/hooks/use-daily-totals";
 import { useProfile } from "@/lib/hooks/use-profile";
@@ -312,6 +313,14 @@ export default function ProgressPage() {
             </p>
           ) : null}
         </Card>
+
+        <CoachCard
+          weeks={weeks}
+          targets={targets}
+          startingWeight={startingWeight}
+          goalWeight={goalWeight}
+          unit={unit}
+        />
 
         {/* ------------------------------------------------- the charts */}
         <ChartCard title="Weight" hint="Daily in gray, seven-day average in blue">

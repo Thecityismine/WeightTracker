@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, Database, Search, Sparkles } from "lucide-react";
+import { Check, Database, Search } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { FoodCard } from "./food-card";
 import { QuantitySheet } from "./quantity-sheet";
+import { AiSearch } from "./ai-search";
 import { useAuth } from "@/lib/auth-context";
 import { useFoodPicker } from "@/lib/food-picker-context";
 import { byUse, searchFoods, useFoods } from "@/lib/hooks/use-foods";
@@ -144,11 +145,9 @@ export function AddFoodSheet() {
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[calc(24px+env(safe-area-inset-bottom,0px))]">
             {tab === "AI" ? (
-              <Empty
-                icon={<Sparkles className="h-5 w-5 text-muted" />}
-                title="AI search arrives in Phase 9"
-                body="Photograph a nutrition label or describe a food, and Claude fills in the macros for you to review."
-              />
+              // Saving from AI drops straight into the quantity sheet, so a
+              // new food can be logged in the same motion it was created.
+              <AiSearch onSaved={(food) => setSelected(food)} />
             ) : tab === "Meals" ? (
               templates.length === 0 ? (
                 <Empty
