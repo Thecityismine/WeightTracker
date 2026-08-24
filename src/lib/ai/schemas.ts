@@ -42,6 +42,10 @@ export const aiFoodSchema = z.object({
     .number()
     .nullable()
     .describe("Sodium MILLIGRAMS in one serving, or null if not known"),
+  potassiumMgPerServing: z
+    .number()
+    .nullable()
+    .describe("Potassium MILLIGRAMS in one serving, or null if not known"),
 
   confidence: z
     .enum(["high", "medium", "low"])

@@ -29,6 +29,7 @@ const N = {
   saturatedFat: "606",
   cholesterol: "601",
   sodium: "307",
+  potassium: "306",
 } as const;
 
 export type UsdaSearchHit = {
@@ -51,6 +52,7 @@ export type ExtendedValues = {
   saturatedFat: number | null;
   cholesterolMg: number | null;
   sodiumMg: number | null;
+  potassiumMg: number | null;
 };
 
 export type UsdaFoodDetail = {
@@ -113,6 +115,7 @@ export function extractExtended(nutrients: RawNutrient[]): ExtendedValues {
     saturatedFat: get(N.saturatedFat),
     cholesterolMg: get(N.cholesterol),
     sodiumMg: get(N.sodium),
+    potassiumMg: get(N.potassium),
   };
 }
 
@@ -128,6 +131,7 @@ export function extendedForGrams(
     saturatedFat: scale(per100g.saturatedFat),
     cholesterolMg: scale(per100g.cholesterolMg),
     sodiumMg: scale(per100g.sodiumMg),
+    potassiumMg: scale(per100g.potassiumMg),
   };
 }
 
@@ -196,6 +200,7 @@ export function mapDetail(raw: RawDetail): UsdaFoodDetail {
       saturatedFat: ln.saturatedFat?.value ?? null,
       cholesterolMg: ln.cholesterol?.value ?? null,
       sodiumMg: ln.sodium?.value ?? null,
+      potassiumMg: ln.potassium?.value ?? null,
     };
   }
 
@@ -265,6 +270,7 @@ export function toFoodInput(
     saturatedFat: null,
     cholesterolMg: null,
     sodiumMg: null,
+    potassiumMg: null,
   };
 
   // Prefer the label's own serving when that is what was picked.
@@ -303,6 +309,7 @@ export function toFoodInput(
     saturatedFatPerServing: round1(extra.saturatedFat),
     cholesterolMgPerServing: round1(extra.cholesterolMg),
     sodiumMgPerServing: round1(extra.sodiumMg),
+    potassiumMgPerServing: round1(extra.potassiumMg),
     dataSource: detail.dataType === "Branded" ? "usda_branded" : "usda_generic",
     externalFoodId: String(detail.fdcId),
     verificationStatus: "usda_verified",

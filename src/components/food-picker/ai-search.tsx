@@ -117,6 +117,7 @@ export function AiSearch({ onSaved }: { onSaved: (food: Food) => void }) {
         saturatedFatPerServing: draft.saturatedFatPerServing,
         cholesterolMgPerServing: draft.cholesterolMgPerServing,
         sodiumMgPerServing: draft.sodiumMgPerServing,
+        potassiumMgPerServing: draft.potassiumMgPerServing,
         dataSource: fromLabel ? "nutrition_label" : "ai_estimate",
         externalFoodId: null,
         verificationStatus: fromLabel ? "label_verified" : "ai_estimated",

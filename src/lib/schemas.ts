@@ -90,6 +90,7 @@ export const foodInputSchema = z
     saturatedFatPerServing: macroValue.nullable().default(null),
     cholesterolMgPerServing: milligramValue.nullable().default(null),
     sodiumMgPerServing: milligramValue.nullable().default(null),
+    potassiumMgPerServing: milligramValue.nullable().default(null),
 
     dataSource: dataSourceSchema,
     externalFoodId: z.string().trim().max(60).nullable().default(null),

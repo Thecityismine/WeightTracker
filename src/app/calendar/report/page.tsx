@@ -295,6 +295,7 @@ function ReportDocument({
             <PartialRow label="Saturated fat" stat={r.saturatedFat} unit="g" />
             <PartialRow label="Cholesterol" stat={r.cholesterolMg} unit="mg" />
             <PartialRow label="Sodium" stat={r.sodiumMg} unit="mg" />
+            <PartialRow label="Potassium" stat={r.potassiumMg} unit="mg" />
           </tbody>
         </table>
 
@@ -303,7 +304,32 @@ function ReportDocument({
           <CoverageNote label="Saturated fat" stat={r.saturatedFat} />
           <CoverageNote label="Cholesterol" stat={r.cholesterolMg} />
           <CoverageNote label="Sodium" stat={r.sodiumMg} />
+          <CoverageNote label="Potassium" stat={r.potassiumMg} />
         </div>
+
+        {/*
+          Sodium against potassium. The ratio is a recognised dietary marker
+          and is more informative than either figure alone, but only when both
+          are well covered — computing it from two partial datasets would give
+          a confident number built on different subsets of the same diet.
+        */}
+        {r.sodiumMg.coverage >= 0.5 &&
+        r.potassiumMg.coverage >= 0.5 &&
+        r.potassiumMg.total > 0 ? (
+          <p className="muted-ink mt-2 text-[12px]">
+            <strong>Sodium to potassium ratio:</strong>{" "}
+            {(r.sodiumMg.total / r.potassiumMg.total).toFixed(2)} to 1, from
+            data covering {Math.round(r.sodiumMg.coverage * 100)}% and{" "}
+            {Math.round(r.potassiumMg.coverage * 100)}% of calories
+            respectively.
+          </p>
+        ) : (
+          <p className="muted-ink mt-2 text-[12px]">
+            A sodium-to-potassium ratio is not shown: it needs both values
+            recorded across at least half of calories eaten, and this month
+            does not reach that.
+          </p>
+        )}
       </Section>
 
       {r.composition ? (
@@ -451,6 +477,7 @@ function ReportDocument({
               <th>Sat fat</th>
               <th>Chol</th>
               <th>Sodium</th>
+              <th>Potas</th>
               <th>Weight</th>
             </tr>
           </thead>
@@ -467,6 +494,7 @@ function ReportDocument({
                 <td>{d.saturatedFat != null ? formatMacro(d.saturatedFat) : "—"}</td>
                 <td>{d.cholesterolMg != null ? Math.round(d.cholesterolMg) : "—"}</td>
                 <td>{d.sodiumMg != null ? Math.round(d.sodiumMg) : "—"}</td>
+                <td>{d.potassiumMg != null ? Math.round(d.potassiumMg) : "—"}</td>
                 <td>{d.weight != null ? formatWeight(d.weight) : "—"}</td>
               </tr>
             ))}
@@ -474,8 +502,8 @@ function ReportDocument({
         </table>
         <p className="muted-ink mt-2 text-[11px]">
           A dash means no value was recorded, which is not the same as zero.
-          Sugar, saturated fat, cholesterol and sodium show a dash on days when
-          none of the foods eaten carried that value on their label.
+          Sugar, saturated fat, cholesterol, sodium and potassium show a dash on
+          days when none of the foods eaten carried that value on their label.
         </p>
       </section>
 
@@ -626,6 +654,7 @@ function reportAsText(
     partial("Saturated fat", r.saturatedFat, "g"),
     partial("Cholesterol", r.cholesterolMg, "mg"),
     partial("Sodium", r.sodiumMg, "mg"),
+    partial("Potassium", r.potassiumMg, "mg"),
     "",
     `Daily targets: ${formatCalories(r.targets.calories)} kcal, ${formatMacro(r.targets.protein)} g protein, ${formatMacro(r.targets.fat)} g fat.`,
     `Calorie target met on ${r.calorieTargetDays} of ${r.daysLogged} logged days.`,

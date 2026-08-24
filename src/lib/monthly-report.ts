@@ -49,6 +49,7 @@ export type DayRow = {
   saturatedFat: number | null;
   cholesterolMg: number | null;
   sodiumMg: number | null;
+  potassiumMg: number | null;
   weight: number | null;
 };
 
@@ -79,6 +80,7 @@ export type MonthlyReport = {
   saturatedFat: PartialStat;
   cholesterolMg: PartialStat;
   sodiumMg: PartialStat;
+  potassiumMg: PartialStat;
 
   weight: {
     entries: number;
@@ -160,6 +162,7 @@ export function buildMonthlyReport(
       saturatedFat: sumPartial(dayLogs.map((l) => l.saturatedFatSnapshot)),
       cholesterolMg: sumPartial(dayLogs.map((l) => l.cholesterolMgSnapshot)),
       sodiumMg: sumPartial(dayLogs.map((l) => l.sodiumMgSnapshot)),
+      potassiumMg: sumPartial(dayLogs.map((l) => l.potassiumMgSnapshot)),
       weight,
     });
   }
@@ -267,6 +270,7 @@ export function buildMonthlyReport(
     saturatedFat: partial((l) => l.saturatedFatSnapshot),
     cholesterolMg: partial((l) => l.cholesterolMgSnapshot),
     sodiumMg: partial((l) => l.sodiumMgSnapshot),
+    potassiumMg: partial((l) => l.potassiumMgSnapshot),
 
     weight: {
       entries: weightValues.length,

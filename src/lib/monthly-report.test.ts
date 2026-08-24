@@ -31,6 +31,7 @@ function log(
     saturatedFatSnapshot: null,
     cholesterolMgSnapshot: null,
     sodiumMgSnapshot: null,
+    potassiumMgSnapshot: null,
     createdAt: "",
     updatedAt: "",
     ...extra,

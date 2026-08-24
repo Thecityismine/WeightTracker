@@ -46,6 +46,7 @@ export function blankFood(): FoodInput {
     saturatedFatPerServing: null,
     cholesterolMgPerServing: null,
     sodiumMgPerServing: null,
+    potassiumMgPerServing: null,
     dataSource: "manual",
     externalFoodId: null,
     verificationStatus: "user_entered",
@@ -74,6 +75,7 @@ export function toInput(food: Food): FoodInput {
     saturatedFatPerServing: food.saturatedFatPerServing ?? null,
     cholesterolMgPerServing: food.cholesterolMgPerServing ?? null,
     sodiumMgPerServing: food.sodiumMgPerServing ?? null,
+    potassiumMgPerServing: food.potassiumMgPerServing ?? null,
     dataSource: food.dataSource,
     externalFoodId: food.externalFoodId,
     verificationStatus: food.verificationStatus,
@@ -352,6 +354,17 @@ export function FoodForm({
               className="input h-11 w-full px-3 text-[15px]"
             />
           </Field>
+          <Field label="Potassium (mg)" htmlFor="pot">
+            <NumberField
+              id="pot"
+              value={draft.potassiumMgPerServing ?? null}
+              onChange={(v) => set("potassiumMgPerServing", v)}
+              allowNull
+              onNull={() => set("potassiumMgPerServing", null)}
+              placeholder="—"
+              className="input h-11 w-full px-3 text-[15px]"
+            />
+          </Field>
         </div>
 
         {/* Live preview — what one serving will actually count as. */}
@@ -371,6 +384,7 @@ export function FoodForm({
             </span>
           </p>
           {draft.sodiumMgPerServing != null ||
+          draft.potassiumMgPerServing != null ||
           draft.sugarPerServing != null ||
           draft.saturatedFatPerServing != null ||
           draft.cholesterolMgPerServing != null ? (
@@ -387,6 +401,9 @@ export function FoodForm({
                   : null,
                 draft.sodiumMgPerServing != null
                   ? `${formatMacro(draft.sodiumMgPerServing)}mg sodium`
+                  : null,
+                draft.potassiumMgPerServing != null
+                  ? `${formatMacro(draft.potassiumMgPerServing)}mg potassium`
                   : null,
               ]
                 .filter(Boolean)

@@ -74,3 +74,20 @@ describe("secondary label values", () => {
     expect(result.success).toBe(true);
   });
 });
+
+describe("potassium", () => {
+  it("defaults to null, like the other label extras", () => {
+    expect(foodInputSchema.parse(BASE).potassiumMgPerServing).toBeNull();
+  });
+
+  it("accepts a milligram figure well past the gram-scale ceiling", () => {
+    // A baked potato is over 900 mg; a grams-oriented max would reject it.
+    const r = foodInputSchema.safeParse({ ...BASE, potassiumMgPerServing: 926 });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejects a negative value", () => {
+    const r = foodInputSchema.safeParse({ ...BASE, potassiumMgPerServing: -5 });
+    expect(r.success).toBe(false);
+  });
+});

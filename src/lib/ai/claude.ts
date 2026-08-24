@@ -46,11 +46,13 @@ Rules you must follow:
 - Prefer well-known reference values (USDA and similar) over invention.
 - Grams: give servingWeightGrams when the serving has a standard weight, and
   null when it genuinely does not.
-- Sugar and saturated fat are in GRAMS. Cholesterol and sodium are in
-  MILLIGRAMS, as printed on a label. Do not mix the units.
+- Sugar and saturated fat are in GRAMS. Cholesterol, sodium and potassium are
+  in MILLIGRAMS, as printed on a label. Do not mix the units.
 - Sugar cannot exceed total carbohydrate; saturated fat cannot exceed total fat.
-- Return null for any of those four you do not actually know. Null means
-  "unknown" and is always better than a plausible invention.
+- Return null for any of those five you do not actually know. Null means
+  "unknown" and is always better than a plausible invention. Potassium in
+  particular is absent from many older labels — say so with null rather than
+  estimating it.
 `.trim();
 
 /** Natural-language food lookup: "medium grilled pork chop, about 5 oz cooked". */

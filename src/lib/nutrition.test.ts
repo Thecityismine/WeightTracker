@@ -285,6 +285,7 @@ describe("computeExtendedMacros", () => {
     saturatedFatPerServing: 1.5,
     cholesterolMgPerServing: 30,
     sodiumMgPerServing: 210,
+    potassiumMgPerServing: 180,
   };
 
   it("scales by quantity like the core macros", () => {
@@ -293,6 +294,7 @@ describe("computeExtendedMacros", () => {
     expect(m.saturatedFat).toBe(3);
     expect(m.cholesterolMg).toBe(60);
     expect(m.sodiumMg).toBe(420);
+    expect(m.potassiumMg).toBe(360);
   });
 
   it("keeps unknown values unknown instead of turning them into zero", () => {
@@ -311,6 +313,7 @@ describe("computeExtendedMacros", () => {
         saturatedFatPerServing: null,
         cholesterolMgPerServing: null,
         sodiumMgPerServing: null,
+        potassiumMgPerServing: null,
       },
       2,
     );
@@ -319,6 +322,7 @@ describe("computeExtendedMacros", () => {
       saturatedFat: null,
       cholesterolMg: null,
       sodiumMg: null,
+      potassiumMg: null,
     });
   });
 });

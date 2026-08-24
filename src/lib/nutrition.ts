@@ -69,6 +69,7 @@ export type ExtendedMacros = {
   saturatedFat: number | null;
   cholesterolMg: number | null;
   sodiumMg: number | null;
+  potassiumMg: number | null;
 };
 
 export function computeExtendedMacros(
@@ -83,6 +84,7 @@ export function computeExtendedMacros(
     saturatedFat: scale(food.saturatedFatPerServing),
     cholesterolMg: scale(food.cholesterolMgPerServing),
     sodiumMg: scale(food.sodiumMgPerServing),
+    potassiumMg: scale(food.potassiumMgPerServing),
   };
 }
 

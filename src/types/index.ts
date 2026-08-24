@@ -60,14 +60,15 @@ export type ServingNutrition = {
  * means "not known", which is a different claim from zero, and defaulting an
  * unknown sodium figure to 0 would quietly understate a day's total.
  *
- * UNITS: sugar and saturated fat in GRAMS; cholesterol and sodium in
- * MILLIGRAMS, matching how a nutrition label prints them.
+ * UNITS: sugar and saturated fat in GRAMS; cholesterol, sodium and potassium
+ * in MILLIGRAMS, matching how a nutrition label prints them.
  */
 export type ExtendedNutrition = {
   sugarPerServing: number | null;
   saturatedFatPerServing: number | null;
   cholesterolMgPerServing: number | null;
   sodiumMgPerServing: number | null;
+  potassiumMgPerServing: number | null;
 };
 
 export type Food = ServingNutrition &
@@ -135,6 +136,7 @@ export type FoodLog = {
   saturatedFatSnapshot: number | null;
   cholesterolMgSnapshot: number | null;
   sodiumMgSnapshot: number | null;
+  potassiumMgSnapshot: number | null;
 
   createdAt: string;
   updatedAt: string;

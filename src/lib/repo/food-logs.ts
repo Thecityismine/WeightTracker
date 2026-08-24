@@ -117,6 +117,7 @@ export async function addLog(
     saturatedFatSnapshot: extra.saturatedFat,
     cholesterolMgSnapshot: extra.cholesterolMg,
     sodiumMgSnapshot: extra.sodiumMg,
+    potassiumMgSnapshot: extra.potassiumMg,
 
     createdAt: now,
     updatedAt: now,
@@ -210,6 +211,7 @@ export async function addLogs(
       saturatedFatSnapshot: extra.saturatedFat,
       cholesterolMgSnapshot: extra.cholesterolMg,
       sodiumMgSnapshot: extra.sodiumMg,
+      potassiumMgSnapshot: extra.potassiumMg,
 
       createdAt: now,
       updatedAt: now,
@@ -260,6 +262,7 @@ export async function copyMeal(
       saturatedFatSnapshot: log.saturatedFatSnapshot ?? null,
       cholesterolMgSnapshot: log.cholesterolMgSnapshot ?? null,
       sodiumMgSnapshot: log.sodiumMgSnapshot ?? null,
+      potassiumMgSnapshot: log.potassiumMgSnapshot ?? null,
 
       createdAt: now,
       updatedAt: now,
@@ -308,6 +311,7 @@ export async function copyDay(
       saturatedFatSnapshot: log.saturatedFatSnapshot ?? null,
       cholesterolMgSnapshot: log.cholesterolMgSnapshot ?? null,
       sodiumMgSnapshot: log.sodiumMgSnapshot ?? null,
+      potassiumMgSnapshot: log.potassiumMgSnapshot ?? null,
 
       createdAt: now,
       updatedAt: now,
