@@ -1,0 +1,212 @@
+import type {
+  DayStatus,
+  MacroSet,
+  MacroTargets,
+  ServingNutrition,
+} from "@/types";
+
+/**
+ * THE calculation engine.
+ *
+ * Every macro number in this app comes from here. No component, route or
+ * script may compute totals inline — that is exactly how the Notion tracker
+ * ended up with serving values and totals that disagreed with each other.
+ *
+ * The rule: a food stores nutrition for ONE base serving. Totals are always
+ * that value multiplied by a quantity. Nobody ever types a total.
+ */
+
+export const EMPTY_MACROS: MacroSet = {
+  calories: 0,
+  protein: 0,
+  fat: 0,
+  carbs: 0,
+  fiber: 0,
+};
+
+/**
+ * Totals for `quantity` servings of a food.
+ *
+ *   totalCalories = caloriesPerServing × quantity
+ *
+ * Throws on nonsense input rather than quietly producing NaN — a wrong number
+ * that looks like a number is the failure mode this whole app exists to avoid.
+ */
+export function computeLogMacros(
+  food: ServingNutrition,
+  quantity: number,
+): MacroSet {
+  assertFinite(quantity, "quantity");
+  if (quantity < 0) {
+    throw new RangeError(`quantity must not be negative, got ${quantity}`);
+  }
+
+  assertFinite(food.caloriesPerServing, "caloriesPerServing");
+  assertFinite(food.proteinPerServing, "proteinPerServing");
+  assertFinite(food.fatPerServing, "fatPerServing");
+  assertFinite(food.carbsPerServing, "carbsPerServing");
+  assertFinite(food.fiberPerServing, "fiberPerServing");
+
+  return {
+    calories: food.caloriesPerServing * quantity,
+    protein: food.proteinPerServing * quantity,
+    fat: food.fatPerServing * quantity,
+    carbs: food.carbsPerServing * quantity,
+    fiber: food.fiberPerServing * quantity,
+  };
+}
+
+/**
+ * Convert a weighed portion into a number of servings.
+ *
+ *   servingsConsumed = gramsConsumed ÷ gramsPerServing
+ *
+ * Feed the result straight into computeLogMacros — never scale macros here.
+ */
+export function gramsToServings(
+  grams: number,
+  servingWeightGrams: number | null,
+): number {
+  assertFinite(grams, "grams");
+  if (grams < 0) {
+    throw new RangeError(`grams must not be negative, got ${grams}`);
+  }
+  if (servingWeightGrams == null || servingWeightGrams <= 0) {
+    throw new RangeError(
+      "Cannot convert grams to servings: this food has no serving weight. " +
+        "Add servingWeightGrams before logging it by weight.",
+    );
+  }
+  return grams / servingWeightGrams;
+}
+
+/** Add up any collection of macro sets. */
+export function sumMacros(sets: readonly Partial<MacroSet>[]): MacroSet {
+  return sets.reduce<MacroSet>(
+    (acc, m) => ({
+      calories: acc.calories + (m.calories ?? 0),
+      protein: acc.protein + (m.protein ?? 0),
+      fat: acc.fat + (m.fat ?? 0),
+      carbs: acc.carbs + (m.carbs ?? 0),
+      fiber: acc.fiber + (m.fiber ?? 0),
+    }),
+    { ...EMPTY_MACROS },
+  );
+}
+
+/**
+ * How much is left against the day's targets.
+ *
+ * Values go negative past the target, and that is fine — the caller decides
+ * how to present it. Calories past target are a surplus, not an overage.
+ */
+export function remaining(
+  totals: Pick<MacroSet, "calories" | "protein" | "fat">,
+  targets: MacroTargets,
+): MacroTargets {
+  return {
+    calories: targets.calories - totals.calories,
+    protein: targets.protein - totals.protein,
+    fat: targets.fat - totals.fat,
+  };
+}
+
+/** Fraction of target consumed, clamped at 0. 1 means exactly on target. */
+export function progressRatio(consumed: number, target: number): number {
+  if (!Number.isFinite(target) || target <= 0) return 0;
+  return Math.max(0, consumed / target);
+}
+
+/** Percentage for progress bars, capped at 100 so the fill cannot overflow. */
+export function progressPercent(consumed: number, target: number): number {
+  return Math.min(100, progressRatio(consumed, target) * 100);
+}
+
+/**
+ * Calendar and dashboard status thresholds:
+ *
+ *   < 90%        below     red
+ *   90 – 99.99%  near      amber
+ *   100 – 115%   ontarget  green
+ *   > 115%       surplus   orange
+ *   no entries   none      gray
+ */
+export function dayStatus(
+  calories: number,
+  target: number,
+  hasEntries: boolean = calories > 0,
+): DayStatus {
+  if (!hasEntries) return "none";
+  const ratio = progressRatio(calories, target);
+  if (ratio < 0.9) return "below";
+  if (ratio < 1) return "near";
+  if (ratio <= 1.15) return "ontarget";
+  return "surplus";
+}
+
+/** True once the calorie target is met — the moment blue becomes green. */
+export function isTargetReached(consumed: number, target: number): boolean {
+  return target > 0 && consumed >= target;
+}
+
+/**
+ * Daily surplus against maintenance. Positive means gaining.
+ * Roughly 3,500 kcal per pound of body mass.
+ */
+export const CALORIES_PER_POUND = 3500;
+
+/** Projected weekly weight change, in pounds, from an average daily surplus. */
+export function projectedWeeklyGain(averageDailySurplus: number): number {
+  return (averageDailySurplus * 7) / CALORIES_PER_POUND;
+}
+
+/* -------------------------------------------------------------------------
+   Display formatting.
+
+   Rounding happens HERE and nowhere else. Stored and intermediate values stay
+   at full precision so that summing many logs never accumulates rounding drift.
+   ------------------------------------------------------------------------- */
+
+/** Calories always read as whole numbers, with a thousands separator. */
+export function formatCalories(value: number): string {
+  return Math.round(value).toLocaleString();
+}
+
+/** Macros read to one decimal, trailing ".0" dropped: 12.6 g, 13 g. */
+export function formatMacro(value: number, decimals = 1): string {
+  const rounded =
+    Math.round(value * 10 ** decimals) / 10 ** decimals;
+  return String(rounded);
+}
+
+/** Weight to one decimal — 144.2 lb. */
+export function formatWeight(value: number): string {
+  return value.toFixed(1);
+}
+
+export function roundTo(value: number, decimals: number): number {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
+function assertFinite(value: number, field: string): void {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError(`${field} must be a finite number, got ${value}`);
+  }
+}
+
+/**
+ * Trailing average over the last `window` values.
+ *
+ * The seven-day weight average is the number that matters on the Progress
+ * screen — daily weight swings by pounds on water alone and cannot be read
+ * as progress. Returns null when there is nothing to average.
+ */
+export function trailingAverage(
+  values: readonly number[],
+  window = 7,
+): number | null {
+  if (values.length === 0) return null;
+  const slice = values.slice(-window);
+  return slice.reduce((a, b) => a + b, 0) / slice.length;
+}

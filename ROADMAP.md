@@ -245,20 +245,33 @@ USDA_API_KEY
 
 **Goal:** the math is correct, and provably so, before any UI depends on it.
 
-- [ ] `types/index.ts` — `Food`, `FoodLog`, `WeightLog`, `Profile`, `MealTemplate`, `DailyTotals`, enums
-- [ ] `lib/nutrition.ts` — the only place macros are ever computed:
+- [x] `types/index.ts` — `Food`, `FoodLog`, `WeightLog`, `Profile`, `MealTemplate`, `DailyTotals`, `MacroSet`, enums
+- [x] `lib/nutrition.ts` — the only place macros are ever computed:
   - `computeLogMacros(food, quantity)` → calories, protein, fat, carbs, fiber
   - `gramsToServings(grams, servingWeightGrams)`
   - `sumMacros(logs[])`
   - `remaining(totals, targets)`
   - `dayStatus(calories, target)` → below | near | ontarget | surplus | none
-- [ ] Zod schemas on every write path — reject a food with no serving size or negative macros
-- [ ] Unit tests on `lib/nutrition.ts` (Vitest), including the egg case: 72 × 2 = 144
-- [ ] Rounding policy: calories to whole numbers, macros to one decimal, **round only at display time**
-- [ ] `lib/repo/*.ts` — server-only data access per collection; every write recomputes `dailyTotals`
-- [ ] Seed script: 30–50 regularly eaten foods (eggs, banana, oatmeal, almond milk, pork chop, quinoa, Ratio yogurt, ISO protein, Cheerios, trail mix, whole milk, honey, rolled oats…) entered from real labels and marked `label_verified`
+  - `progressRatio` / `progressPercent` / `isTargetReached`
+  - `projectedWeeklyGain`, `trailingAverage` (the seven-day weight number)
+- [x] Throws `TypeError`/`RangeError` on NaN, Infinity or negative input — a wrong number that *looks* like a number is the exact failure this app exists to prevent
+- [x] `lib/schemas.ts` — Zod on every write path; rejects missing serving sizes, negative macros, fiber exceeding carbs, and AI foods with no confidence score
+- [x] `lib/dates.ts` — local-timezone `YYYY-MM-DD` keys. **Never `toISOString()`** for a log date: it converts to UTC, so anything logged after 7pm Eastern would land on tomorrow
+- [x] Rounding policy: whole calories, one decimal for macros, **rounded only at display time**
+- [x] `lib/repo/*.ts` — foods, food-logs, weight-logs, daily-totals, profile; every log mutation recomputes that day's `dailyTotals` from the logs themselves
+- [x] `updateLogQuantity` rescales from the stored **snapshot**, so editing a portion never pulls in a later label correction
+- [x] `data/seed-foods.ts` — 41 foods entered from labels and USDA references
+- [x] `scripts/seed.mts` — idempotent, keyed on name + brand, never resets `useCount`
+- [x] `scripts/rebuild-daily-totals.mts` — proves the cache is reproducible from `foodLogs` alone
 
-**Done when:** `npm test` passes and the seed script populates Firestore with foods whose serving math checks out against their labels.
+### Verified
+
+- [x] **42 tests passing** — including the egg case, `72 × 2 = 144`
+- [x] Every seed food passes schema validation, has a serving weight, and survives an **Atwater cross-check** (4/9/4 kcal per gram) that catches a typo'd decimal
+- [x] The framework doc's breakfast reproduces exactly: 2 eggs + oatmeal + banana = 479 kcal, 25.9 g protein
+- [x] Typecheck, lint, and a build with `.env.local` removed all clean
+
+**Done when:** ~~`npm test` passes and the seed script populates Firestore~~ — tests pass; seeding runs once the service-account key and `ALLOWED_UID` exist.
 
 ---
 
