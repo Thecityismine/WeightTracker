@@ -5,7 +5,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -37,15 +36,22 @@ export async function listLogsForDate(
   userId: string,
   date: DateKey,
 ): Promise<FoodLog[]> {
+  // Sorted in memory rather than with orderBy. Two equality filters plus an
+  // ordering needs a three-field composite index, and this function runs on
+  // every single log write via rebuildDailyTotals — so a missing index breaks
+  // adding food entirely. A day holds a few dozen entries; sorting them here
+  // costs nothing and removes the dependency.
   const snap = await getDocs(
     query(
       collection(getDb(), LOGS),
       where("userId", "==", userId),
       where("logDate", "==", date),
-      orderBy("createdAt", "asc"),
     ),
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FoodLog);
+
+  const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FoodLog);
+  rows.sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""));
+  return rows;
 }
 
 /** Every log in a date range — the monthly report's source data. */
