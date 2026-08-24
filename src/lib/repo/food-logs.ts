@@ -48,6 +48,30 @@ export async function listLogsForDate(
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FoodLog);
 }
 
+/** Every log in a date range — the monthly report's source data. */
+export async function listLogsForRange(
+  userId: string,
+  from: DateKey,
+  to: DateKey,
+): Promise<FoodLog[]> {
+  const snap = await getDocs(
+    query(
+      collection(getDb(), LOGS),
+      where("userId", "==", userId),
+      where("logDate", ">=", from),
+      where("logDate", "<=", to),
+    ),
+  );
+
+  const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FoodLog);
+  rows.sort(
+    (a, b) =>
+      a.logDate.localeCompare(b.logDate) ||
+      (a.createdAt ?? "").localeCompare(b.createdAt ?? ""),
+  );
+  return rows;
+}
+
 /**
  * Log a food.
  *

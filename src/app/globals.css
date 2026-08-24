@@ -236,3 +236,82 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------
+   Printable report.
+
+   The app is dark, but a document handed to a clinician is not: it
+   gets printed or saved as PDF, and dark backgrounds waste ink and
+   read badly on paper. The report renders as white paper on screen
+   too, which signals what it is.
+   --------------------------------------------------------------- */
+.paper {
+  background: #ffffff;
+  color: #111418;
+  border-radius: 12px;
+}
+
+.paper h1,
+.paper h2,
+.paper h3,
+.paper th {
+  color: #0b0e11;
+}
+
+.paper .muted-ink {
+  color: #5a636d;
+}
+
+.paper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.paper th,
+.paper td {
+  border-bottom: 1px solid #e4e8ec;
+  padding: 5px 6px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.paper th:first-child,
+.paper td:first-child {
+  text-align: left;
+}
+
+.paper thead th {
+  border-bottom: 1.5px solid #c9d0d7;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5a636d;
+}
+
+@media print {
+  /* Nothing but the document. */
+  body {
+    background: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .paper {
+    border-radius: 0;
+    box-shadow: none;
+    max-width: none;
+    padding: 0 !important;
+  }
+  .page-break {
+    break-before: page;
+  }
+  table {
+    break-inside: auto;
+  }
+  tr {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+}

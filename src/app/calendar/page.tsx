@@ -12,7 +12,8 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { CalendarCheck, ChevronLeft, ChevronRight, Copy, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { CalendarCheck, ChevronLeft, ChevronRight, Copy, FileText, Loader2 } from "lucide-react";
 import { Card, PageHeader, SectionLabel } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { useDailyTotals } from "@/lib/hooks/use-daily-totals";
@@ -169,6 +170,14 @@ export default function CalendarPage() {
           One low day is not a failure. The weekly average is what moves the
           scale.
         </p>
+
+        <Link
+          href="/calendar/report"
+          className="btn-secondary pressable mt-4 flex h-11 w-full items-center justify-center gap-2 text-[14px] font-[600]"
+        >
+          <FileText className="h-4 w-4" />
+          Monthly report
+        </Link>
 
         <SelectedDay date={selected} targetsCalories={targets.calories} />
       </div>
