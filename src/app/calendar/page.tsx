@@ -238,15 +238,16 @@ function DayCell({
         {format(date, "d")}
       </span>
 
+      {/*
+        Calories only. The protein line under it was 9.5px and the pair read
+        as one smudge at arm's length; dropping it buys the number the room
+        to be legible. Green is for readability here rather than status — the
+        line along the bottom edge still carries whether the day landed.
+      */}
       {totals && totals.entryCount > 0 ? (
-        <>
-          <span className="metric mt-0.5 text-[9.5px] leading-tight text-secondary">
-            {Math.round(totals.calories).toLocaleString()}
-          </span>
-          <span className="metric text-[9.5px] leading-tight text-muted">
-            {Math.round(totals.protein)}P
-          </span>
-        </>
+        <span className="metric mt-1 text-[13px] font-[600] leading-tight text-success">
+          {Math.round(totals.calories).toLocaleString()}
+        </span>
       ) : null}
 
       {line ? (
@@ -268,31 +269,52 @@ function WeekSummary({
   totals: Record<DateKey, DailyTotals>;
   target: number;
 }) {
-  const logged = week
-    .map((d) => totals[toDateKey(d)])
-    .filter((t): t is DailyTotals => Boolean(t) && t!.entryCount > 0);
+  const logged: { key: DateKey; day: DailyTotals }[] = [];
+  for (const d of week) {
+    const key = toDateKey(d);
+    const day = totals[key];
+    if (day && day.entryCount > 0) logged.push({ key, day });
+  }
 
   if (logged.length === 0) {
     return <div className="mb-1.5 h-4" />;
   }
 
   const avg =
-    logged.reduce((sum, t) => sum + t.calories, 0) / logged.length;
-  const onTarget = logged.filter((t) => t.calories >= target).length;
+    logged.reduce((sum, l) => sum + l.day.calories, 0) / logged.length;
+
+  /*
+   * Today is still being logged. Counting it against the target at 5pm
+   * reported "0/1 on target" for a day with dinner still ahead of it, so the
+   * tally covers finished days only and disappears when there are none yet.
+   * The average still includes today — it is labelled as the average of what
+   * has been logged, and dropping today would blank the current week's row
+   * for most of the week.
+   */
+  const finished = logged.filter((l) => !isToday(l.key));
+  const onTarget = finished.filter((l) => l.day.calories >= target).length;
 
   return (
     <div className="mb-1.5 flex justify-end gap-2 pr-1 pt-0.5">
       <span className="metric text-[10.5px] text-muted">
         {formatCalories(avg)} avg
       </span>
-      <span
-        className="metric text-[10.5px]"
-        style={{
-          color: onTarget >= 5 ? "var(--success)" : "var(--text-muted)",
-        }}
-      >
-        {onTarget}/{logged.length} on target
-      </span>
+      {finished.length > 0 ? (
+        <span
+          className="metric text-[10.5px]"
+          style={{
+            // Proportional, not a flat "5 of 7": a week that is three days
+            // old can never reach five, so the old threshold left every
+            // in-progress week grey however well it was going.
+            color:
+              onTarget / finished.length >= 0.7
+                ? "var(--success)"
+                : "var(--text-muted)",
+          }}
+        >
+          {onTarget}/{finished.length} on target
+        </span>
+      ) : null}
     </div>
   );
 }

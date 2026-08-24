@@ -301,8 +301,14 @@ Black monthly grid with compact nutrition indicators.
 ```text
 23
 2,810
-132P
 ```
+
+Calories only, in success green at 13px. Protein used to sit on a third
+line at 9.5px; stacked under the calories it read as one smudge rather than
+two numbers, and the calorie figure is the one worth glancing at. This is a
+deliberate exception to "green only for reaching targets" — here green buys
+legibility against the black grid, and the status line under the date still
+says whether the day actually landed.
 
 Status dot or thin bottom line:
 
