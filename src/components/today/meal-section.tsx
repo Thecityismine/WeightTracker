@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Plus, Trash2 } from "lucide-react";
+import { BookmarkPlus, ChevronRight, CopyPlus, Plus, Trash2 } from "lucide-react";
 import { formatCalories, formatMacro, sumMacros } from "@/lib/nutrition";
 import { MEAL_LABELS, type MealCategory } from "@/lib/constants";
 import type { FoodLog } from "@/types";
@@ -18,6 +18,8 @@ export function MealSection({
   onAdd,
   onEdit,
   onDelete,
+  onCopyYesterday,
+  onSaveAsMeal,
 }: {
   meal: MealCategory;
   logs: FoodLog[];
@@ -26,6 +28,8 @@ export function MealSection({
   onAdd: (meal: MealCategory) => void;
   onEdit: (log: FoodLog) => void;
   onDelete: (log: FoodLog) => void;
+  onCopyYesterday: (meal: MealCategory) => void;
+  onSaveAsMeal: (meal: MealCategory) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -94,6 +98,30 @@ export function MealSection({
               ? `Add ${MEAL_LABELS[meal].toLowerCase()}`
               : "Add food"}
           </button>
+
+          {/* Secondary actions stay quiet — muted, small, never blue, so the
+              primary "Add food" keeps its emphasis. */}
+          <div className="-mt-1 flex gap-4">
+            <button
+              type="button"
+              onClick={() => onCopyYesterday(meal)}
+              className="flex items-center gap-1 py-1.5 text-[12px] text-muted"
+            >
+              <CopyPlus className="h-3.5 w-3.5" />
+              Copy yesterday
+            </button>
+
+            {logs.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => onSaveAsMeal(meal)}
+                className="flex items-center gap-1 py-1.5 text-[12px] text-muted"
+              >
+                <BookmarkPlus className="h-3.5 w-3.5" />
+                Save as meal
+              </button>
+            ) : null}
+          </div>
 
           {nudge ? (
             <p className="text-[12px] text-muted">

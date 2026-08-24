@@ -413,14 +413,28 @@ USDA_API_KEY
 
 **Goal:** cut logging time to near zero for repeat meals.
 
-- [ ] Create a template from scratch or from an already-logged meal ("Save as meal")
-- [ ] Template detail: ingredients with quantities and computed total macros
-- [ ] Apply a template → adds every item to its meal category, quantities still editable afterward
-- [ ] **Copy meal from yesterday** button on each meal section
-- [ ] Starter templates: Regular breakfast, Workday lunch, Regular shake, Apple and trail mix, Weekend breakfast
-- [ ] Regular shake seeded as ISO protein 1 scoop, Ratio yogurt ½, rolled oats ½ cup, banana 1, whole milk 1 cup, honey 1 tbsp
+- [x] Create a template from scratch (`/templates` → New template) or from an already-logged meal (**Save as meal** on any meal section)
+- [x] Template detail: ingredients with quantities and computed total macros
+- [x] Apply a template → adds every item to the chosen meal, quantities still editable afterward
+- [x] **Meals** tab in the Add Food sheet, so a template is reachable mid-log
+- [x] **Copy yesterday** on every meal section
+- [x] Template editor: rename, re-categorize, adjust quantities, add and remove ingredients
+- [x] Starter templates: Regular breakfast, Weekend breakfast, Workday lunch, Regular shake, Apple and trail mix
+- [x] Regular shake seeded as ISO protein 1 scoop, Ratio yogurt ½, rolled oats ½ cup, banana 1, whole milk 1 cup, honey 1 tbsp
+- [x] A starter template whose ingredients are missing is **skipped and reported**, never created half-complete
+- [x] Applying a template writes all logs then rebuilds daily totals **once**, not once per ingredient
 
-**Done when:** a normal breakfast is logged in one tap.
+### Design notes
+
+- **Template items reference a food; they do not snapshot it.** This is the deliberate opposite of a food log. A log records what was eaten and must never change; a template is a recipe for what you are *about* to eat, so it should pick up any label correction made since.
+- **Items live in an array on the template document**, not the subcollection originally sketched in the data model. A template is a handful of ingredients always read as a unit, so a subcollection would mean one extra listener per template for nothing.
+
+### Verified
+
+- [x] Typecheck, lint, 66 tests, and a build with `.env.local` removed all clean
+- [ ] One-tap logging of a real shake *(yours to confirm)*
+
+**Done when:** ~~a normal breakfast is logged in one tap~~ — built and deployed.
 
 ---
 

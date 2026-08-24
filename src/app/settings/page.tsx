@@ -302,6 +302,7 @@ export default function SettingsPage() {
           <SectionLabel>Nutrition database</SectionLabel>
           <div className="mt-1 divide-y divide-white/[0.06]">
             <LinkRow href="/foods" label="Manage foods" value={`${foods.length}`} />
+            <LinkRow href="/templates" label="Meal templates" />
           </div>
 
           <button

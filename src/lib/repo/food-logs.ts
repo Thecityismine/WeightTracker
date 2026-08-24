@@ -15,6 +15,7 @@ import { getDb } from "@/lib/firebase";
 import { computeLogMacros, dayStatus, sumMacros } from "@/lib/nutrition";
 import { foodLogInputSchema, type FoodLogInput } from "@/lib/schemas";
 import type { DateKey } from "@/lib/dates";
+import type { MealCategory } from "@/lib/constants";
 import type { DailyTotals, Food, FoodLog, MacroTargets } from "@/types";
 
 const LOGS = "foodLogs";
@@ -129,6 +130,92 @@ export async function deleteLog(
 ): Promise<void> {
   await deleteDoc(doc(getDb(), LOGS, logId));
   await rebuildDailyTotals(userId, date, targets);
+}
+
+/**
+ * Write several logs at once, rebuilding that day's totals a single time.
+ *
+ * Applying a six-ingredient template through addLog() would recompute the
+ * day's totals six times — six full day reads for one user action.
+ */
+export async function addLogs(
+  userId: string,
+  entries: { food: Food; quantity: number; mealCategory: MealCategory }[],
+  date: DateKey,
+  targets: MacroTargets,
+): Promise<number> {
+  if (entries.length === 0) return 0;
+  const now = new Date().toISOString();
+
+  for (const { food, quantity, mealCategory } of entries) {
+    const macros = computeLogMacros(food, quantity);
+    await addDoc(collection(getDb(), LOGS), {
+      userId,
+      foodId: food.id,
+      logDate: date,
+      mealCategory,
+      quantity,
+
+      nameSnapshot: food.name,
+      servingDescriptionSnapshot: food.servingDescription,
+      caloriesSnapshot: macros.calories,
+      proteinSnapshot: macros.protein,
+      fatSnapshot: macros.fat,
+      carbsSnapshot: macros.carbs,
+      fiberSnapshot: macros.fiber,
+
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await rebuildDailyTotals(userId, date, targets);
+  return entries.length;
+}
+
+/**
+ * Copy one meal from another day.
+ *
+ * Snapshots are copied verbatim, so yesterday's breakfast reproduces exactly
+ * what was eaten rather than what the food says today.
+ */
+export async function copyMeal(
+  userId: string,
+  from: DateKey,
+  to: DateKey,
+  meal: MealCategory,
+  targets: MacroTargets,
+): Promise<number> {
+  const source = (await listLogsForDate(userId, from)).filter(
+    (l) => l.mealCategory === meal,
+  );
+  if (source.length === 0) return 0;
+
+  const now = new Date().toISOString();
+
+  for (const log of source) {
+    await addDoc(collection(getDb(), LOGS), {
+      userId,
+      foodId: log.foodId,
+      logDate: to,
+      mealCategory: meal,
+      quantity: log.quantity,
+
+      nameSnapshot: log.nameSnapshot,
+      servingDescriptionSnapshot: log.servingDescriptionSnapshot,
+      caloriesSnapshot: log.caloriesSnapshot,
+      proteinSnapshot: log.proteinSnapshot,
+      fatSnapshot: log.fatSnapshot,
+      carbsSnapshot: log.carbsSnapshot,
+      fiberSnapshot: log.fiberSnapshot,
+
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await rebuildDailyTotals(userId, to, targets);
+  return source.length;
 }
 
 /**

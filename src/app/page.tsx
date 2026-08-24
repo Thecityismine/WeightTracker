@@ -14,12 +14,14 @@ import { useFoods } from "@/lib/hooks/use-foods";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { useWeights } from "@/lib/hooks/use-weights";
 import { useMounted } from "@/lib/use-mounted";
-import { deleteLog, updateLogQuantity } from "@/lib/repo/food-logs";
+import { copyMeal, deleteLog, updateLogQuantity } from "@/lib/repo/food-logs";
+import { createTemplate } from "@/lib/repo/meal-templates";
 import { formatWeight, sumMacros } from "@/lib/nutrition";
-import { MEAL_CATEGORIES } from "@/lib/constants";
+import { MEAL_CATEGORIES, MEAL_LABELS, type MealCategory } from "@/lib/constants";
 import {
   daysSince,
   formatLongDate,
+  shiftDateKey as shiftKey,
   isToday,
   shiftDateKey,
   todayKey,
@@ -36,6 +38,7 @@ export default function TodayPage() {
   const [editing, setEditing] = useState<FoodLog | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [weighing, setWeighing] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const { profile, targets } = useProfile(user?.uid ?? null);
   const { latest, average7, forDate } = useWeights(user?.uid ?? null);
@@ -60,6 +63,32 @@ export default function TodayPage() {
   async function handleDelete(log: FoodLog) {
     if (!user) return;
     await deleteLog(user.uid, log.id, log.logDate, targets);
+  }
+
+  async function handleCopyYesterday(meal: MealCategory) {
+    if (!user) return;
+    const n = await copyMeal(user.uid, shiftKey(date, -1), date, meal, targets);
+    setToast(
+      n === 0
+        ? `Nothing was logged for ${MEAL_LABELS[meal].toLowerCase()} yesterday.`
+        : `Copied ${n} food${n === 1 ? "" : "s"} from yesterday.`,
+    );
+  }
+
+  async function handleSaveAsMeal(meal: MealCategory) {
+    if (!user) return;
+    const rows = logs.filter((l) => l.mealCategory === meal);
+    if (rows.length === 0) return;
+
+    await createTemplate(
+      user.uid,
+      `${MEAL_LABELS[meal]} — ${formatLongDate(date)}`,
+      meal,
+      rows.map((l) => ({ foodId: l.foodId, quantity: l.quantity })),
+    );
+    setToast(
+      `Saved as a template. Rename it under Settings › Meal templates.`,
+    );
   }
 
   async function handleEditConfirm(quantity: number) {
@@ -197,12 +226,25 @@ export default function TodayPage() {
               onAdd={(m) => openPicker(m, date)}
               onEdit={setEditing}
               onDelete={(log) => void handleDelete(log)}
+              onCopyYesterday={(m) => void handleCopyYesterday(m)}
+              onSaveAsMeal={(m) => void handleSaveAsMeal(m)}
             />
           ))
         )}
 
         <div className="h-8" />
       </div>
+
+      {toast ? (
+        <button
+          type="button"
+          onClick={() => setToast(null)}
+          className="fixed inset-x-4 bottom-[92px] z-30 mx-auto max-w-md rounded-[12px] border border-white/10 px-4 py-3 text-left text-[13px] text-foreground"
+          style={{ background: "var(--surface-active)" }}
+        >
+          {toast}
+        </button>
+      ) : null}
 
       <WeightSheet
         key={`w-${date}-${weightToday?.weight ?? "none"}`}
