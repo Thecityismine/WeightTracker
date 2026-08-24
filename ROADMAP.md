@@ -198,7 +198,15 @@ Each phase ends deployable. Ship it, use it for a day, then start the next one.
 ### Ship
 
 - [x] Committed and pushed to GitHub
-- [ ] `vercel link`, set env vars for Preview + Production, deploy *(needs the service-account key)*
+- [x] Vercel project linked; GitHub auto-deploy confirmed working
+- [x] Firebase config set in Vercel for production, preview and development
+- [x] Production deploy **Ready**
+- [ ] Service-account vars (`FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `ALLOWED_UID`) — add to Vercel once the account exists
+- [ ] Resolve site access: Deployment Protection is on, and the `weight-tracker-beta-umber` alias 404s
+
+**Deploy pipeline:** push to `main` → Vercel builds and promotes to production automatically. Every completed phase gets pushed.
+
+> **Lesson from the first failed deploy:** Next prerenders client components on the server during `next build`, so anything at module scope runs there too. Firebase now initializes lazily on first access. Before pushing anything that touches SDK setup, build once with `.env.local` renamed — that reproduces Vercel's environment exactly.
 
 ### Verified
 
