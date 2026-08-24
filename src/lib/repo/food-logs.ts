@@ -132,6 +132,49 @@ export async function deleteLog(
 }
 
 /**
+ * Copy every food from one day onto another.
+ *
+ * The snapshots are copied verbatim rather than recomputed from the current
+ * foods, so a day copied forward reproduces exactly what was eaten — even if
+ * a label has been corrected since.
+ */
+export async function copyDay(
+  userId: string,
+  from: DateKey,
+  to: DateKey,
+  targets: MacroTargets,
+): Promise<number> {
+  const source = await listLogsForDate(userId, from);
+  if (source.length === 0) return 0;
+
+  const now = new Date().toISOString();
+
+  for (const log of source) {
+    await addDoc(collection(getDb(), LOGS), {
+      userId,
+      foodId: log.foodId,
+      logDate: to,
+      mealCategory: log.mealCategory,
+      quantity: log.quantity,
+
+      nameSnapshot: log.nameSnapshot,
+      servingDescriptionSnapshot: log.servingDescriptionSnapshot,
+      caloriesSnapshot: log.caloriesSnapshot,
+      proteinSnapshot: log.proteinSnapshot,
+      fatSnapshot: log.fatSnapshot,
+      carbsSnapshot: log.carbsSnapshot,
+      fiberSnapshot: log.fiberSnapshot,
+
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await rebuildDailyTotals(userId, to, targets);
+  return source.length;
+}
+
+/**
  * Recompute one day's totals from its logs.
  *
  * `dailyTotals` is a cache and nothing more. This function is the definition
