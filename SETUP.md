@@ -1,30 +1,27 @@
 # Setup — remaining credentials and console steps
 
-The client-side Firebase config is already wired into `.env.local`. Six things still need to come from you before Phase 0 can finish. Each takes a minute or two.
+The client-side Firebase config is already wired into `.env.local`. Firestore, Storage, the auth account, and the security rules are all live. What remains is the service-account key, two API keys, and one console toggle.
 
-**Project:** `weighttracker-76f46` · **Repo:** `Thecityismine/WeightTracker` · **Live:** https://weight-tracker-beta-umber.vercel.app/
+**Project:** `weighttracker-76f46` · **Repo:** `Thecityismine/WeightTracker` · **Live:** https://weight-tracker-georges-projects-b78bafb0.vercel.app/
 
 ---
 
-## 1. Enable Firestore
-
-Console → **Build → Firestore Database → Create database**
-
-- Start in **production mode** (the repo's rules replace the defaults in step 7)
-- Location: `nam5 (us-central)` unless you have a reason otherwise — it cannot be changed later
+## 1. ~~Enable Firestore~~ ✅ done
 
 ## 2. ~~Enable Storage~~ ✅ done
 
-## 3. Turn on Email/Password auth and create your account
+## 3. Auth account ✅ created — one step left
 
-Console → **Build → Authentication → Get started**
+Your account exists (`georgemedina7@aol.com`, password set) and its UID is already
+wired into the rules, `.env.local`, and Vercel.
 
-1. **Sign-in method** tab → enable **Email/Password**. Leave "Email link (passwordless)" off.
-2. **Settings** tab → **User actions** → **uncheck "Enable create (sign-up)"**. This is the step that keeps the internet out — without it, the provider accepts new registrations from anyone who finds the app.
-3. **Users** tab → **Add user** → your email and a password. This is your login.
-4. Copy the **User UID** from the users table.
+**Still to do:** Console → **Authentication → Settings → User actions** →
+**uncheck "Enable create (sign-up)"**.
 
-→ Paste that UID into `ALLOWED_UID` in `.env.local`.
+Without it the Email/Password provider accepts new registrations from anyone who
+finds the app. The rules deny those accounts every byte of data, so this is the
+second layer rather than the only one — but leaving open signup on a public URL
+is still an invitation worth declining.
 
 ## 4. Generate a service-account key
 
@@ -49,21 +46,17 @@ https://fdc.nal.usda.gov/api-key-signup — free, arrives by email in seconds �
 
 Not needed until Phase 8.
 
-## 7. Deploy the security rules
+## 7. ~~Deploy the security rules~~ ✅ done
 
-`firestore.rules` and `storage.rules` are written and committed, but both carry a placeholder where your UID goes. Until it's replaced, **the rules deny everything** — which is the safe failure direction, but nothing will work.
+Rules and indexes are live on `weighttracker-76f46`, pinned to your UID.
+Verified: anonymous reads of `foods`, `foodLogs`, `weightLogs` and `dailyTotals`
+all return `403 PERMISSION_DENIED`.
 
-1. Open `firestore.rules` and `storage.rules`
-2. Replace `PASTE_YOUR_FIREBASE_AUTH_UID_HERE` in both with the UID from step 3
-3. Deploy:
+Redeploy after any rules change:
 
 ```bash
-firebase login
-firebase use weighttracker-76f46
-firebase deploy --only firestore:rules,firestore:indexes,storage
+npx firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
-
-Verify in the console that the Rules tab shows your UID and not the placeholder.
 
 ---
 

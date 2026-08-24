@@ -5,14 +5,14 @@ rules_version = '2';
 // Every collection is pinned to one Firebase Auth UID. Even if a second
 // account somehow gets created, it can read and write nothing.
 //
-// SETUP: replace the placeholder below with your UID from
-// Firebase Console > Authentication > Users > User UID.
+// The UID below is the single owner account. Changing accounts means
+// updating it here and redeploying: firebase deploy --only firestore:rules
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function ownerUid() {
-      return 'PASTE_YOUR_FIREBASE_AUTH_UID_HERE';
+      return 'pvB84RHsdRZ6WCvjnbPAfyKMR542';
     }
 
     function isOwner() {
