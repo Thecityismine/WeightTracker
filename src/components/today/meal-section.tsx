@@ -36,7 +36,10 @@ export function MealSection({
   foods: Food[];
   onQuickAdd: (food: Food, meal: MealCategory) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapsed by default. Five expanded meals push the calorie ring and the
+  // macro cards — the numbers the dashboard exists to show — off the screen,
+  // so a meal opens when it is asked for, not before.
+  const [collapsed, setCollapsed] = useState(true);
 
   const totals = sumMacros(
     logs.map((l) => ({
@@ -129,14 +132,19 @@ export function MealSection({
               </button>
             ) : null}
           </div>
-
-          {nudge ? (
-            <p className="text-[12px] text-muted">
-              Still short of today&apos;s target — dinner is the easiest place to
-              close the gap.
-            </p>
-          ) : null}
         </>
+      ) : null}
+
+      {/*
+        Outside the collapse: an empty dinner late in an unmet day is the one
+        thing the section has to say whether or not it is open, and now that
+        meals start closed it would otherwise never be seen.
+      */}
+      {nudge ? (
+        <p className="pt-2 text-[12px] text-muted">
+          Still short of today&apos;s target — dinner is the easiest place to
+          close the gap.
+        </p>
       ) : null}
     </section>
   );
