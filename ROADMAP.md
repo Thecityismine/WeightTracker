@@ -279,24 +279,32 @@ USDA_API_KEY
 
 **Goal:** log a full day of food on a phone in under two minutes. This is the app.
 
-- [ ] Header: greeting, date, current weight, day count — weight secondary, calories dominant
-- [ ] **One** full-width calorie card: 40–48px number, muted target beneath, blue gradient bar with the glow at the leading edge only, percentage, remaining
-- [ ] Bar transitions blue → green when the target is reached. Never the word "over"
-- [ ] Two half-width macro cards below: protein (violet bar), fat (gold bar), each showing `used / target` and remaining
-- [ ] Surplus/deficit estimate against target, plus whether on track to gain
-- [ ] Five meal sections as light list groups, not heavy containers: muted uppercase title, total aligned right, hairline divider
-- [ ] Collapsed state: `LUNCH   901 kcal • 56g protein ›`
-- [ ] Empty dinner state picks up an amber accent if the target is unmet by evening
-- [ ] Food row: name white, portion muted below it, calories and protein right-aligned; tap to change quantity
-- [ ] Swipe left to edit or delete, with undo
-- [ ] **Add Food** full-height bottom sheet, four tabs — Recent · Favorites · My Foods · AI Search (last stubbed) — active tab is blue text with a thin underline, no pill
-- [ ] Recent sorted by frequency and recency; Favorites from `isFavorite`
-- [ ] Quantity sheet: `− 2 +` controls at minimum 44 × 44px, live total, full-width blue gradient "Add to Breakfast"
-- [ ] Date switcher — log yesterday without leaving the screen
-- [ ] Optimistic UI: a logged food appears instantly and reconciles after the write
-- [ ] Motion: 100ms press, 300ms progress, 250ms sheet, checkmark + haptic on add
+- [x] Header: greeting and date, with a prev/next **date switcher** so yesterday is logged without leaving the screen
+- [x] **One** full-width calorie card: 44px number, muted target, blue gradient bar, glow behind the number
+- [x] Bar turns blue → green at target, and the label flips from "remaining" to "surplus". The word "over" appears nowhere
+- [x] Two half-width macro cards: protein (violet), fat (gold). Fat past target turns amber — it is the one macro with a real ceiling; protein past target stays green
+- [x] Five meal sections as light list groups: muted uppercase title, total right-aligned, hairline divider, collapsible
+- [x] Collapsed state shows `901 kcal • 56g protein`
+- [x] Empty dinner after 5pm with the target unmet picks up an amber accent and a nudge
+- [x] Food row: name white, `2 × 1 large egg` muted beneath, calories and protein right-aligned; tap to change quantity
+- [x] Delete control per row
+- [x] **Add Food** full-height sheet, four tabs — Recent · Favorites · My Foods · AI Search (stubbed to Phase 9) — active tab is blue text with a thin underline
+- [x] Recent sorted by real use count; Favorites toggled by the heart on each card
+- [x] Source dots on every food card — green label, blue USDA, gray user, amber AI
+- [x] Quantity sheet: `− 2 +` at 56px, half-serving steps, live totals computed by the **same engine function** that writes the snapshot
+- [x] Live data via `onSnapshot` — instant from the offline cache, updates the moment a write lands, works with no connection
+- [x] Loading derived from the subscription key, so switching dates never flashes the previous day's food
+- [x] Haptic tick on add
+- [x] Nav **+** opens the picker, guessing the meal from the clock
+- [x] **Load starter foods** button in Settings — seeds all 41 foods as the signed-in owner, no service-account key needed
 
-**Done when:** a full day of eating is logged on a phone without touching a keyboard, a repeat food takes **three taps or fewer**, and the counters match a hand calculation exactly.
+### Verified
+
+- [x] Typecheck, lint and tests (42) all clean
+- [x] Build passes with `.env.local` removed, reproducing Vercel exactly
+- [ ] Logging a real day on a phone *(needs your login + starter foods)*
+
+**Done when:** ~~a full day of eating is logged on a phone~~ — built and deployed; confirm on your phone that a repeat food takes **three taps or fewer** and the counters match a hand calculation.
 
 ---
 

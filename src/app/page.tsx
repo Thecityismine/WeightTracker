@@ -1,84 +1,167 @@
 "use client";
 
-import { Card, SectionLabel } from "@/components/ui/card";
-import { DEFAULT_TARGETS } from "@/lib/constants";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalorieCard } from "@/components/today/calorie-card";
+import { MacroCards } from "@/components/today/macro-cards";
+import { MealSection } from "@/components/today/meal-section";
+import { QuantitySheet } from "@/components/food-picker/quantity-sheet";
+import { useAuth } from "@/lib/auth-context";
+import { useFoodPicker } from "@/lib/food-picker-context";
+import { useDayLogs } from "@/lib/hooks/use-day-logs";
+import { useFoods } from "@/lib/hooks/use-foods";
+import { useProfile } from "@/lib/hooks/use-profile";
 import { useMounted } from "@/lib/use-mounted";
+import { deleteLog, updateLogQuantity } from "@/lib/repo/food-logs";
+import { sumMacros } from "@/lib/nutrition";
+import { MEAL_CATEGORIES } from "@/lib/constants";
+import {
+  formatLongDate,
+  isToday,
+  shiftDateKey,
+  todayKey,
+  type DateKey,
+} from "@/lib/dates";
+import type { FoodLog } from "@/types";
 
-/**
- * Today — the default screen.
- *
- * Phase 0 renders the real header and an empty calorie card so the token
- * system is proven end to end. Logging, meal sections and the macro cards
- * arrive in Phase 2.
- */
 export default function TodayPage() {
-  // Read the clock only after mount — the server has no idea what time it is
-  // here, and rendering its guess would mismatch on hydration.
-  const now = useMounted() ? new Date() : null;
+  const { user } = useAuth();
+  const mounted = useMounted();
+  const { openPicker } = useFoodPicker();
 
-  const consumed = 0;
-  const target = DEFAULT_TARGETS.calories;
-  const pct = Math.min(100, Math.round((consumed / target) * 100));
-  const remaining = target - consumed;
+  const [date, setDate] = useState<DateKey>(todayKey());
+  const [editing, setEditing] = useState<FoodLog | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const { targets } = useProfile(user?.uid ?? null);
+  const { logs, loading } = useDayLogs(user?.uid ?? null, date);
+  const { foods } = useFoods(user?.uid ?? null);
+
+  const totals = sumMacros(
+    logs.map((l) => ({
+      calories: l.caloriesSnapshot,
+      protein: l.proteinSnapshot,
+      fat: l.fatSnapshot,
+    })),
+  );
+
+  const hour = mounted ? new Date().getHours() : 12;
+  const isEvening = hour >= 17;
+  const targetUnmet = totals.calories < targets.calories;
+
+  async function handleDelete(log: FoodLog) {
+    if (!user) return;
+    await deleteLog(user.uid, log.id, log.logDate, targets);
+  }
+
+  async function handleEditConfirm(quantity: number) {
+    if (!user || !editing) return;
+    setSavingEdit(true);
+    try {
+      await updateLogQuantity(user.uid, editing.id, quantity, targets);
+      setEditing(null);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  // The quantity sheet needs a Food shape; rebuild per-serving values from the
+  // log's own snapshot so editing never pulls in a later label correction.
+  const editingFood = editing
+    ? {
+        ...(foods.find((f) => f.id === editing.foodId) ?? {}),
+        id: editing.foodId,
+        name: editing.nameSnapshot,
+        servingDescription: editing.servingDescriptionSnapshot,
+        caloriesPerServing: editing.caloriesSnapshot / editing.quantity,
+        proteinPerServing: editing.proteinSnapshot / editing.quantity,
+        fatPerServing: editing.fatSnapshot / editing.quantity,
+        carbsPerServing: editing.carbsSnapshot / editing.quantity,
+        fiberPerServing: editing.fiberSnapshot / editing.quantity,
+      }
+    : null;
 
   return (
     <main className="mx-auto max-w-lg">
       <header className="px-5 pb-5 pt-9">
         <h1 className="text-[26px] font-[650] leading-tight tracking-tight text-foreground">
-          {now ? greeting(now) : " "}
+          {mounted ? greeting(hour) : " "}
         </h1>
-        <p className="mt-1 text-sm text-secondary">
-          {now
-            ? now.toLocaleDateString(undefined, {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })
-            : " "}
-        </p>
+
+        <div className="mt-1 flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="Previous day"
+            onClick={() => setDate((d) => shiftDateKey(d, -1))}
+            className="flex h-8 w-7 items-center justify-center text-muted"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          <p className="min-w-[170px] text-sm text-secondary">
+            {isToday(date) ? "Today, " : ""}
+            {formatLongDate(date)}
+          </p>
+
+          <button
+            type="button"
+            aria-label="Next day"
+            onClick={() => setDate((d) => shiftDateKey(d, 1))}
+            disabled={isToday(date)}
+            className="flex h-8 w-7 items-center justify-center text-muted disabled:opacity-25"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </header>
 
       <div className="px-4">
-        <Card className="px-5 py-6">
-          <SectionLabel>Today</SectionLabel>
+        <CalorieCard consumed={totals.calories} target={targets.calories} />
 
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="metric text-[44px] font-[650] leading-none text-foreground">
-              {consumed.toLocaleString()}
-            </span>
-            <span className="text-[15px] text-muted">
-              of {target.toLocaleString()} calories
-            </span>
-          </div>
+        <MacroCards
+          protein={totals.protein}
+          fat={totals.fat}
+          proteinTarget={targets.protein}
+          fatTarget={targets.fat}
+        />
 
-          <div className="progress-track mt-5 h-2.5 w-full">
-            <div
-              className="progress-fill progress-calories"
-              style={{ width: `${Math.max(pct, 1.5)}%` }}
+        {loading && logs.length === 0 ? (
+          <p className="pt-10 text-center text-[13px] text-muted">Loading…</p>
+        ) : (
+          MEAL_CATEGORIES.map((meal) => (
+            <MealSection
+              key={meal}
+              meal={meal}
+              logs={logs.filter((l) => l.mealCategory === meal)}
+              isEvening={isEvening}
+              targetUnmet={targetUnmet}
+              onAdd={(m) => openPicker(m, date)}
+              onEdit={setEditing}
+              onDelete={(log) => void handleDelete(log)}
             />
-          </div>
+          ))
+        )}
 
-          <div className="mt-3 flex items-center justify-between">
-            <span className="metric text-[13px] text-muted">{pct}%</span>
-            <span className="metric text-[13px] text-blue">
-              {remaining.toLocaleString()} remaining
-            </span>
-          </div>
-        </Card>
-
-        <p className="mt-6 px-1 text-[13px] leading-relaxed text-muted">
-          Food logging, macro cards and meal sections arrive in Phase 2. The
-          nutrition engine lands first, in Phase 1, so the math is right before
-          anything depends on it.
-        </p>
+        <div className="h-8" />
       </div>
+
+      <QuantitySheet
+        key={editing?.id ?? "none"}
+        food={editingFood as never}
+        meal={editing?.mealCategory ?? "breakfast"}
+        open={Boolean(editing)}
+        busy={savingEdit}
+        initialQuantity={editing?.quantity ?? 1}
+        submitLabel="Save quantity"
+        onClose={() => setEditing(null)}
+        onConfirm={(q) => void handleEditConfirm(q)}
+      />
     </main>
   );
 }
 
-function greeting(d: Date) {
-  const h = d.getHours();
-  if (h < 12) return "Good morning, Jorge";
-  if (h < 18) return "Good afternoon, Jorge";
+function greeting(hour: number) {
+  if (hour < 12) return "Good morning, Jorge";
+  if (hour < 18) return "Good afternoon, Jorge";
   return "Good evening, Jorge";
 }

@@ -7,7 +7,6 @@ import {
   limit,
   orderBy,
   query,
-  serverTimestamp,
   setDoc,
   where,
 } from "firebase/firestore";
@@ -30,7 +29,7 @@ export async function saveWeight(
   await setDoc(doc(getDb(), WEIGHTS, parsed.date), {
     userId,
     ...parsed,
-    createdAt: serverTimestamp(),
+    createdAt: new Date().toISOString(),
   });
 }
 

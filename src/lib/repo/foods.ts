@@ -8,7 +8,6 @@ import {
   limit,
   orderBy,
   query,
-  serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -70,13 +69,14 @@ export async function createFood(
   input: FoodInput,
 ): Promise<string> {
   const parsed = foodInputSchema.parse(input);
+  const now = new Date().toISOString();
   const ref = await addDoc(collection(getDb(), FOODS), {
     ...parsed,
     userId,
     useCount: 0,
     lastUsedAt: null,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+    createdAt: now,
+    updatedAt: now,
   });
   return ref.id;
 }
@@ -88,7 +88,7 @@ export async function updateFood(
   const parsed = foodInputSchema.parse(input);
   await updateDoc(doc(getDb(), FOODS, foodId), {
     ...parsed,
-    updatedAt: serverTimestamp(),
+    updatedAt: new Date().toISOString(),
   });
 }
 
@@ -101,7 +101,7 @@ export async function updateFood(
 export async function archiveFood(foodId: string): Promise<void> {
   await updateDoc(doc(getDb(), FOODS, foodId), {
     isActive: false,
-    updatedAt: serverTimestamp(),
+    updatedAt: new Date().toISOString(),
   });
 }
 
@@ -111,7 +111,7 @@ export async function toggleFavorite(
 ): Promise<void> {
   await updateDoc(doc(getDb(), FOODS, foodId), {
     isFavorite,
-    updatedAt: serverTimestamp(),
+    updatedAt: new Date().toISOString(),
   });
 }
 
@@ -119,6 +119,6 @@ export async function toggleFavorite(
 export async function recordUse(foodId: string): Promise<void> {
   await updateDoc(doc(getDb(), FOODS, foodId), {
     useCount: increment(1),
-    lastUsedAt: serverTimestamp(),
+    lastUsedAt: new Date().toISOString(),
   });
 }

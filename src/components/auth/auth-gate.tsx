@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { LoginScreen } from "./login-screen";
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { FoodPickerProvider } from "@/lib/food-picker-context";
+import { AddFoodSheet } from "@/components/food-picker/add-food-sheet";
 
 /**
  * Wraps the whole app. Three states: restoring the session, signed out,
@@ -22,12 +24,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
+    <FoodPickerProvider>
       {/* Bottom padding clears the nav bar plus the home indicator. */}
       <div className="min-h-dvh pb-[calc(76px+env(safe-area-inset-bottom,0px))]">
         {children}
       </div>
       <BottomNav />
-    </>
+      <AddFoodSheet />
+    </FoodPickerProvider>
   );
 }

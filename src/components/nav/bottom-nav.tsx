@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, Home, Plus, Settings, TrendingUp } from "lucide-react";
+import { useFoodPicker } from "@/lib/food-picker-context";
+import type { MealCategory } from "@/lib/constants";
 
 const items = [
   { href: "/", label: "Today", icon: Home },
@@ -83,15 +85,30 @@ function NavItem({
   );
 }
 
-/** Elevated 52px center button — opens quick food selection (Phase 2). */
+/** Elevated 52px center button — opens quick food selection. */
 function AddButton() {
+  const { openPicker } = useFoodPicker();
+
   return (
     <button
       type="button"
       aria-label="Add food"
+      onClick={() => openPicker(mealForNow())}
       className="btn-primary pressable -mt-6 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full"
     >
       <Plus className="h-6 w-6 text-white" strokeWidth={2.5} />
     </button>
   );
+}
+
+/**
+ * Guess the meal from the clock so the quick-add lands in the right section
+ * without asking. Still changeable inside the sheet.
+ */
+function mealForNow(): MealCategory {
+  const h = new Date().getHours();
+  if (h < 11) return "breakfast";
+  if (h < 15) return "lunch";
+  if (h < 17) return "snack";
+  return "dinner";
 }

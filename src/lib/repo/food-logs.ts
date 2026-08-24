@@ -7,7 +7,6 @@ import {
   getDocs,
   orderBy,
   query,
-  serverTimestamp,
   setDoc,
   updateDoc,
   where,
@@ -57,6 +56,10 @@ export async function addLog(
 ): Promise<string> {
   const parsed = foodLogInputSchema.parse(input);
   const macros = computeLogMacros(food, parsed.quantity);
+  // ISO strings rather than serverTimestamp(): a pending server timestamp
+  // reads as null locally, so an optimistic row would sort to the top and
+  // then visibly jump once the write lands. Single user, so no clock skew.
+  const now = new Date().toISOString();
 
   const ref = await addDoc(collection(getDb(), LOGS), {
     userId,
@@ -73,8 +76,8 @@ export async function addLog(
     carbsSnapshot: macros.carbs,
     fiberSnapshot: macros.fiber,
 
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+    createdAt: now,
+    updatedAt: now,
   });
 
   await rebuildDailyTotals(userId, parsed.logDate, targets);
@@ -112,7 +115,7 @@ export async function updateLogQuantity(
     fatSnapshot: macros.fat,
     carbsSnapshot: macros.carbs,
     fiberSnapshot: macros.fiber,
-    updatedAt: serverTimestamp(),
+    updatedAt: new Date().toISOString(),
   });
 
   await rebuildDailyTotals(userId, log.logDate, targets);
@@ -159,10 +162,8 @@ export async function rebuildDailyTotals(
     status: dayStatus(totals.calories, targets.calories, logs.length > 0),
   };
 
-  await setDoc(doc(getDb(), TOTALS, date), {
-    ...record,
-    updatedAt: serverTimestamp(),
-  });
+  const updatedAt = new Date().toISOString();
+  await setDoc(doc(getDb(), TOTALS, date), { ...record, updatedAt });
 
-  return { ...record, updatedAt: new Date().toISOString() };
+  return { ...record, updatedAt };
 }

@@ -1,4 +1,4 @@
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { profileInputSchema, type ProfileInput } from "@/lib/schemas";
 import { DEFAULT_TARGETS, GOAL } from "@/lib/constants";
@@ -19,7 +19,7 @@ export async function saveProfile(
   const parsed = profileInputSchema.parse(input);
   await setDoc(
     doc(getDb(), PROFILE, userId),
-    { ...parsed, userId, updatedAt: serverTimestamp() },
+    { ...parsed, userId, updatedAt: new Date().toISOString() },
     { merge: true },
   );
 }
