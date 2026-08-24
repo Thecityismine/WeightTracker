@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -113,6 +114,34 @@ export async function toggleFavorite(
     isFavorite,
     updatedAt: new Date().toISOString(),
   });
+}
+
+/**
+ * Remove a food, preserving history.
+ *
+ * A food that has ever been logged is archived rather than deleted: the logs
+ * carry their own nutrition snapshots and stay correct either way, but a hard
+ * delete orphans the foodId and breaks "log this again" from history. A food
+ * that was never logged has no history to protect, so it really goes.
+ */
+export async function deleteOrArchiveFood(
+  foodId: string,
+): Promise<"deleted" | "archived"> {
+  const logs = await getDocs(
+    query(
+      collection(getDb(), "foodLogs"),
+      where("foodId", "==", foodId),
+      limit(1),
+    ),
+  );
+
+  if (logs.empty) {
+    await deleteDoc(doc(getDb(), FOODS, foodId));
+    return "deleted";
+  }
+
+  await archiveFood(foodId);
+  return "archived";
 }
 
 /** Called whenever a food is logged, so Recent stays ordered by real use. */

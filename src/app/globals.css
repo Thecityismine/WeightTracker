@@ -86,10 +86,19 @@ body {
   font-feature-settings: "tnum";
 }
 
+/*
+ * Numbers.
+ *
+ * DESIGN.md specifies Geist Mono for metrics, and Geist Mono renders a
+ * slashed zero by default — at 44px "0 of 2,800" reads as a glyph error
+ * rather than a design choice. Geist Sans with tabular figures keeps the
+ * non-shifting alignment that mattered here without the slash.
+ */
 .metric {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
 }
 
 /* Small uppercase metric labels — CALORIES, PROTEIN, FAT */

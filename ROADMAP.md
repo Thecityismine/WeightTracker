@@ -314,17 +314,23 @@ USDA_API_KEY
 
 > **Navigation note:** the design's bottom nav is Today · Calendar · **+** · Progress · Settings — the center button opens quick food selection, so Foods has no nav slot of its own. Reach the foods database from **Settings → Nutrition database → Manage foods** and from the **My Foods** tab of the Add Food sheet. Route stays `/foods`.
 
-- [ ] Foods list: search, filter by category, favorites toggle, sort by most-used
-- [ ] Source dots on every row — green label-verified, blue USDA, gray user-entered, amber AI-estimated
-- [ ] Manual create/edit form covering every field in the schema
-- [ ] Verification badges — Label Verified · USDA Verified · User Entered · AI Estimated
-- [ ] AI Estimated badge shows: *"Estimated nutrition. Confirm the serving size or replace it with label data when available."*
-- [ ] Label-photo upload to Firebase Storage, thumbnail on the food detail
-- [ ] Archive instead of delete when a food already has logs (protects history)
-- [ ] Duplicate-a-food action for label variants
-- [ ] Live "1 serving = X cal / Y g protein" preview while filling the form
+- [x] Foods list: search, category filter, favorites-only toggle, sort by most-used or A–Z
+- [x] Source dots on every row — green label, blue USDA, gray user, amber AI — plus a "logged N×" counter
+- [x] Manual create and edit covering every schema field, at `/foods/new` and `/foods/[id]`
+- [x] Live preview: "1 × 1 large egg counts as 72 kcal, 6.3g P, 4.8g F" while you type
+- [x] Validation surfaces the first real problem rather than a wall of messages
+- [x] Label photo capture straight to Firebase Storage; adding one promotes the food to **label-verified**
+- [x] AI-estimated foods carry the amber confirm-the-serving strip
+- [x] **Archive rather than delete** when a food has ever been logged — the app checks for logs and says which happened and why
+- [x] Duplicate a food, for label variants
+- [x] Favorite toggle inline on each row
 
-**Done when:** a new food can be added from a package label in under a minute and used immediately from the Today screen.
+### Verified
+
+- [x] Typecheck, lint, 42 tests, and a build with `.env.local` removed all clean
+- [ ] Adding a real food from a package *(yours to confirm)*
+
+**Done when:** ~~a new food can be added from a package label in under a minute~~ — built and deployed; confirm on a real package.
 
 ---
 

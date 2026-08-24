@@ -103,10 +103,12 @@ backdrop-filter: blur(16px);
 Clean and geometric.
 
 - **Primary:** Geist Sans
-- **Numbers:** Geist Mono
+- **Numbers:** ~~Geist Mono~~ → **Geist Sans with tabular figures** (see below)
 - **Alternative:** Inter
 
 Use **tabular numbers** for calories, protein, fat, and weight so values do not shift as they update.
+
+> **Deviation, 2026-08-24.** Geist Mono renders a slashed zero by default. At 44px, `0 of 2,800 calories` reads as a glyph error rather than a design decision. Metrics now use Geist Sans with `font-variant-numeric: tabular-nums`, which keeps the non-shifting alignment that motivated a monospace face in the first place, without the slash. Geist Mono stays loaded as `--font-mono` for anything genuinely code-like.
 
 | Element | Size | Weight |
 | --- | --- | --- |
