@@ -34,7 +34,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         `md` the rail takes over, so the padding goes and the content shifts
         clear of the rail instead.
       */}
-      <div className="min-h-dvh pb-[calc(80px+env(safe-area-inset-bottom,0px))] md:pb-10 md:pl-[236px]">
+      <div className="min-h-dvh pt-safe pb-[calc(80px+env(safe-area-inset-bottom,0px))] md:pb-10 md:pl-[236px]">
         {children}
       </div>
 

@@ -35,10 +35,17 @@ export function SideNav() {
   const pathname = usePathname();
   const { openPicker } = useFoodPicker();
 
+  // Top padding is its own breathing room PLUS the notch inset. `pt-safe`
+  // alone would replace the padding rather than add to it, leaving the header
+  // flush against the top edge on any device that reports no inset.
   return (
     <nav
-      className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col border-r border-white/[0.06] px-4 py-6 md:flex"
-      style={{ background: "rgba(9, 12, 16, 0.72)", backdropFilter: "blur(20px)" }}
+      className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col border-r border-white/[0.06] px-4 pb-6 md:flex"
+      style={{
+        background: "rgba(9, 12, 16, 0.72)",
+        backdropFilter: "blur(20px)",
+        paddingTop: "calc(24px + env(safe-area-inset-top, 0px))",
+      }}
     >
       <div className="px-2 pb-6">
         <p className="text-[15px] font-[650] tracking-tight text-foreground">

@@ -32,7 +32,7 @@ export function LoginScreen() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-6">
+    <main className="flex min-h-dvh flex-col items-center justify-center px-6 pt-safe">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-surface">

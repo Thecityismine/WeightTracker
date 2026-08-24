@@ -19,21 +19,29 @@ export const metadata: Metadata = {
   description: "Muscle gain food tracker",
   appleWebApp: {
     capable: true,
-    // "black" lets the OS reserve the status bar strip and paint it to match
-    // themeColor. "black-translucent" hands that job to the app, which means
-    // getting insets right on every device — and getting them wrong shows up
-    // as content under the clock or a mismatched bar above it.
-    statusBarStyle: "black",
+    // Translucent, so the web view reaches the top of the screen and the
+    // background gradient paints behind the status bar rather than the OS
+    // filling that strip with flat black. The app owes the inset back as
+    // padding — see `pt-safe` on the authed shell and the login screen.
+    statusBarStyle: "black-translucent",
     title: "Tracker",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050608",
+  /*
+   * The colour of the gradient where it meets the top of the screen, not the
+   * flat background beneath it. Browsers that tint their own chrome from this
+   * value (Safari's non-standalone bar, Android) then blend into the page
+   * instead of drawing a dark band above it.
+   */
+  themeColor: "#05141e",
   width: "device-width",
   initialScale: 1,
   // No pinch-zoom on a data entry app — it only ever fires by accident.
   maximumScale: 1,
+  // Extend under the status bar. Insets are paid back with `pt-safe`.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
