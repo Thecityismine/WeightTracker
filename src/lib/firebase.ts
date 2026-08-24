@@ -1,4 +1,4 @@
-import { getApp, getApps, initializeApp } from "firebase/app";
+import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import {
   browserLocalPersistence,
   getAuth,
@@ -24,23 +24,59 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Everything below initializes lazily, on first access.
+//
+// Next prerenders client components on the server at build time, so anything
+// running at module scope runs during `next build` too — where these env vars
+// may be absent and Firebase has no business connecting to anything. Deferring
+// means the SDK only ever wakes up in a browser, when something actually asks.
 
-export const auth: Auth = getAuth(app);
+let appRef: FirebaseApp | null = null;
+let authRef: Auth | null = null;
+let dbRef: Firestore | null = null;
+let storageRef: FirebaseStorage | null = null;
 
-// Stay signed in across app restarts. Logging in should be a rare event,
-// not a daily toll on the way to breakfast.
-if (typeof window !== "undefined") {
-  void setPersistence(auth, browserLocalPersistence);
+function firebaseApp(): FirebaseApp {
+  if (appRef) return appRef;
+
+  if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+    throw new Error(
+      "Firebase client config is missing. Set the NEXT_PUBLIC_FIREBASE_* " +
+        "variables locally in .env.local and in the Vercel project settings.",
+    );
+  }
+
+  appRef = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return appRef;
 }
 
-// Offline cache so the Today screen works in a basement gym.
-export const db: Firestore = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentSingleTabManager(undefined),
-  }),
-});
+export function getFirebaseAuth(): Auth {
+  if (authRef) return authRef;
 
-export const storage: FirebaseStorage = getStorage(app);
+  authRef = getAuth(firebaseApp());
 
-export { app };
+  // Stay signed in across app restarts. Logging in should be a rare event,
+  // not a daily toll on the way to breakfast.
+  void setPersistence(authRef, browserLocalPersistence);
+
+  return authRef;
+}
+
+/** Offline cache so the Today screen works in a basement gym. */
+export function getDb(): Firestore {
+  if (dbRef) return dbRef;
+
+  dbRef = initializeFirestore(firebaseApp(), {
+    localCache: persistentLocalCache({
+      tabManager: persistentSingleTabManager(undefined),
+    }),
+  });
+
+  return dbRef;
+}
+
+export function getFirebaseStorage(): FirebaseStorage {
+  if (storageRef) return storageRef;
+  storageRef = getStorage(firebaseApp());
+  return storageRef;
+}

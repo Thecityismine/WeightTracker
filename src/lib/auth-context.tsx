@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -14,7 +15,7 @@ import {
   signOut as fbSignOut,
   type User,
 } from "firebase/auth";
-import { auth } from "./firebase";
+import { getFirebaseAuth } from "./firebase";
 
 type AuthState = {
   user: User | null;
@@ -33,6 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Touching Firebase here rather than at module scope keeps it out of the
+    // server prerender, where the SDK has no config and no reason to run.
+    const auth = getFirebaseAuth();
+
     // Fires once with the restored session, then on every change. Until it
     // fires we hold `loading`, so a refresh never flashes the login screen.
     return onAuthStateChanged(auth, (next) => {
@@ -41,19 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const signIn = useCallback(async (email: string, password: string) => {
+    await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await fbSignOut(getFirebaseAuth());
+  }, []);
+
+  const getToken = useCallback(
+    async () => getFirebaseAuth().currentUser?.getIdToken() ?? null,
+    [],
+  );
+
   const value = useMemo<AuthState>(
-    () => ({
-      user,
-      loading,
-      signIn: async (email, password) => {
-        await signInWithEmailAndPassword(auth, email.trim(), password);
-      },
-      signOut: async () => {
-        await fbSignOut(auth);
-      },
-      getToken: async () => auth.currentUser?.getIdToken() ?? null,
-    }),
-    [user, loading],
+    () => ({ user, loading, signIn, signOut, getToken }),
+    [user, loading, signIn, signOut, getToken],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

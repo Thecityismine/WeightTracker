@@ -47,3 +47,6 @@ next-env.d.ts
 weighttracker_keys.txt
 *_keys.txt
 *_keys*
+
+.vercel
+.env*.local
