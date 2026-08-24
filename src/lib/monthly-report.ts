@@ -1,5 +1,6 @@
 import { dateKeyRange, toDateKey, type DateKey } from "./dates";
-import type { FoodLog, MacroTargets, WeightLog } from "@/types";
+import { compareReadings, movingAgainstGoal, type MetricChange } from "./body-composition";
+import type { BodyComposition, FoodLog, MacroTargets, WeightLog } from "@/types";
 
 /**
  * Monthly nutrition report, intended to be handed to a clinician.
@@ -105,6 +106,17 @@ export type MonthlyReport = {
    */
   topSodium: Contributor[];
   topCalories: Contributor[];
+
+  /**
+   * Body composition, comparing the latest reading in the month against the
+   * most recent one before it. Null when there is no reading in the month.
+   */
+  composition: {
+    current: BodyComposition;
+    previous: BodyComposition | null;
+    changes: MetricChange[];
+    against: MetricChange[];
+  } | null;
 };
 
 export function buildMonthlyReport(
@@ -113,6 +125,7 @@ export function buildMonthlyReport(
   logs: FoodLog[],
   weights: WeightLog[],
   targets: MacroTargets,
+  compositions: BodyComposition[] = [],
 ): MonthlyReport {
   const allDates = dateKeyRange(from, to);
 
@@ -218,6 +231,25 @@ export function buildMonthlyReport(
 
   const contributors = [...byFood.values()];
 
+  // Latest reading inside the month, compared against the last one before it —
+  // "progress since last month" rather than progress within the month.
+  const sortedComps = [...compositions].sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
+  const inMonth = sortedComps.filter((c) => c.date >= from && c.date <= to);
+  const beforeMonth = sortedComps.filter((c) => c.date < from);
+
+  const currentComp = inMonth.length ? inMonth[inMonth.length - 1] : null;
+  const previousComp = beforeMonth.length
+    ? beforeMonth[beforeMonth.length - 1]
+    : inMonth.length > 1
+      ? inMonth[0]
+      : null;
+
+  const compChanges = currentComp
+    ? compareReadings(currentComp, previousComp)
+    : [];
+
   return {
     from,
     to,
@@ -263,6 +295,15 @@ export function buildMonthlyReport(
     topCalories: [...contributors]
       .sort((a, b) => b.calories - a.calories)
       .slice(0, 10),
+
+    composition: currentComp
+      ? {
+          current: currentComp,
+          previous: previousComp,
+          changes: compChanges,
+          against: movingAgainstGoal(compChanges),
+        }
+      : null,
   };
 }
 

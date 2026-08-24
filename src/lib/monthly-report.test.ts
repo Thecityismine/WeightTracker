@@ -285,3 +285,106 @@ describe("contributor tables", () => {
     expect(r.topSodium).toHaveLength(0);
   });
 });
+
+describe("body composition section", () => {
+  function comp(date: string, values: Record<string, number>) {
+    return {
+      id: date,
+      userId: "me",
+      date,
+      bodyFatPercent: null,
+      bmi: null,
+      muscleMassLb: null,
+      visceralFat: null,
+      bodyWaterPercent: null,
+      subcutaneousFatPercent: null,
+      skeletalMusclePercent: null,
+      boneMassLb: null,
+      fatFreeMassLb: null,
+      bmrKcal: null,
+      proteinPercent: null,
+      metabolicAge: null,
+      ratings: null,
+      source: "manual" as const,
+      createdAt: "",
+      ...values,
+    };
+  }
+
+  it("compares this month's reading against the one before the month", () => {
+    const r = buildMonthlyReport(
+      "2026-09-01",
+      "2026-09-30",
+      [],
+      [],
+      TARGETS,
+      [
+        comp("2026-08-15", { bodyFatPercent: 17.5, muscleMassLb: 113.4 }),
+        comp("2026-09-20", { bodyFatPercent: 16.8, muscleMassLb: 115.9 }),
+      ],
+    );
+
+    expect(r.composition).not.toBeNull();
+    expect(r.composition!.current.date).toBe("2026-09-20");
+    expect(r.composition!.previous!.date).toBe("2026-08-15");
+
+    const fat = r.composition!.changes.find(
+      (c) => c.def.key === "bodyFatPercent",
+    )!;
+    expect(fat.favorable).toBe(true);
+    expect(r.composition!.against).toHaveLength(0);
+  });
+
+  it("flags a metric that moved away from the goal", () => {
+    const r = buildMonthlyReport(
+      "2026-09-01",
+      "2026-09-30",
+      [],
+      [],
+      TARGETS,
+      [
+        comp("2026-08-15", { bodyFatPercent: 17.5 }),
+        comp("2026-09-20", { bodyFatPercent: 19.5 }),
+      ],
+    );
+
+    expect(r.composition!.against.map((c) => c.def.key)).toEqual([
+      "bodyFatPercent",
+    ]);
+  });
+
+  it("falls back to the month's own first reading when nothing precedes it", () => {
+    const r = buildMonthlyReport(
+      "2026-09-01",
+      "2026-09-30",
+      [],
+      [],
+      TARGETS,
+      [
+        comp("2026-09-02", { muscleMassLb: 113 }),
+        comp("2026-09-28", { muscleMassLb: 115 }),
+      ],
+    );
+    expect(r.composition!.previous!.date).toBe("2026-09-02");
+  });
+
+  it("has no comparison from a single first-ever reading", () => {
+    const r = buildMonthlyReport("2026-09-01", "2026-09-30", [], [], TARGETS, [
+      comp("2026-09-20", { muscleMassLb: 113 }),
+    ]);
+    expect(r.composition!.previous).toBeNull();
+    expect(r.composition!.against).toHaveLength(0);
+  });
+
+  it("is null when the month has no reading at all", () => {
+    const r = buildMonthlyReport("2026-09-01", "2026-09-30", [], [], TARGETS, [
+      comp("2026-07-01", { muscleMassLb: 113 }),
+    ]);
+    expect(r.composition).toBeNull();
+  });
+
+  it("stays null when no compositions are supplied", () => {
+    const r = buildMonthlyReport("2026-09-01", "2026-09-30", [], [], TARGETS);
+    expect(r.composition).toBeNull();
+  });
+});

@@ -166,6 +166,30 @@ export const weightLogInputSchema = z.object({
 
 export type WeightLogInput = z.infer<typeof weightLogInputSchema>;
 
+/** Wide bounds — these only exist to reject a garbled screenshot read. */
+const scaleValue = (max: number) =>
+  z.number().finite().min(0).max(max).nullable().default(null);
+
+export const bodyCompositionInputSchema = z.object({
+  date: isoDate,
+  bodyFatPercent: scaleValue(80),
+  bmi: scaleValue(100),
+  muscleMassLb: scaleValue(500),
+  visceralFat: scaleValue(60),
+  bodyWaterPercent: scaleValue(100),
+  subcutaneousFatPercent: scaleValue(80),
+  skeletalMusclePercent: scaleValue(100),
+  boneMassLb: scaleValue(50),
+  fatFreeMassLb: scaleValue(500),
+  bmrKcal: scaleValue(6000),
+  proteinPercent: scaleValue(100),
+  metabolicAge: scaleValue(120),
+  ratings: z.record(z.string(), z.string()).nullable().default(null),
+  source: z.enum(["ai_screenshot", "manual"]).default("manual"),
+});
+
+export type BodyCompositionInput = z.infer<typeof bodyCompositionInputSchema>;
+
 export const macroTargetsSchema = z.object({
   calories: z.number().int().min(800).max(10000),
   protein: z.number().min(0).max(500),

@@ -1,6 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { aiFoodSchema, coachSchema, type AiFood, type CoachReply } from "./schemas";
+import {
+  aiFoodSchema,
+  coachSchema,
+  scaleReadingSchema,
+  type AiFood,
+  type CoachReply,
+  type ScaleReading,
+} from "./schemas";
 
 /**
  * Claude calls, kept as plain functions so they can be exercised without an
@@ -140,6 +147,59 @@ Rules:
 
   if (!response.parsed_output) {
     throw new Error("Claude did not return a usable summary.");
+  }
+  return response.parsed_output;
+}
+
+/**
+ * Read a smart-scale screenshot into structured metrics.
+ *
+ * Scales report in kg or lb depending on their settings, and confusing the two
+ * would corrupt a trend silently — 51 kg of muscle read as 51 lb looks
+ * plausible and is completely wrong. The prompt forces the conversion and the
+ * schema names the expected unit on every mass field.
+ */
+export async function scanScaleScreenshot(
+  imageBase64: string,
+  mediaType: "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+): Promise<ScaleReading> {
+  const response = await client().messages.parse({
+    model: MODEL,
+    max_tokens: 4000,
+    thinking: { type: "adaptive" },
+    system: `You read body-composition screenshots from smart scales.
+
+Rules:
+- Transcribe only what is visible. Never infer, derive or estimate a metric
+  that is not shown — return null for it instead. A missing number is fine; an
+  invented one corrupts a health trend.
+- Mass values must be returned in POUNDS. If the screenshot shows kilograms,
+  convert (1 kg = 2.20462 lb) and use the converted value.
+- Copy each metric's rating word exactly as the device prints it, including
+  its capitalisation. Do not translate, normalise or invent ratings.
+- If a value is visible but you cannot read it confidently, put the metric name
+  in "unreadable" and set the value to null rather than guessing.
+- Percentages are plain numbers: 17.5, not 0.175.`,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mediaType, data: imageBase64 },
+          },
+          {
+            type: "text",
+            text: "Read every body composition metric shown in this screenshot.",
+          },
+        ],
+      },
+    ],
+    output_config: { format: zodOutputFormat(scaleReadingSchema) },
+  });
+
+  if (!response.parsed_output) {
+    throw new Error("Could not read that screenshot.");
   }
   return response.parsed_output;
 }

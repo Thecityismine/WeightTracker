@@ -168,6 +168,41 @@ export type WeightLog = {
   createdAt: string;
 };
 
+/**
+ * A smart-scale body composition reading.
+ *
+ * Every metric is nullable: scales differ in what they report, and a
+ * screenshot may be cropped or partly unreadable. Null means the device did
+ * not give us the number, which must never be shown as zero.
+ *
+ * `ratings` holds the device's OWN classification per metric ("Standard",
+ * "Excellent"). Capturing the scale's wording avoids inventing clinical
+ * thresholds the app has no business asserting.
+ */
+export type BodyComposition = {
+  id: string;
+  userId: string;
+  /** YYYY-MM-DD, and also the document id — one reading per day. */
+  date: string;
+
+  bodyFatPercent: number | null;
+  bmi: number | null;
+  muscleMassLb: number | null;
+  visceralFat: number | null;
+  bodyWaterPercent: number | null;
+  subcutaneousFatPercent: number | null;
+  skeletalMusclePercent: number | null;
+  boneMassLb: number | null;
+  fatFreeMassLb: number | null;
+  bmrKcal: number | null;
+  proteinPercent: number | null;
+  metabolicAge: number | null;
+
+  ratings: Record<string, string> | null;
+  source: "ai_screenshot" | "manual";
+  createdAt: string;
+};
+
 export type WeightUnit = "lb" | "kg";
 
 export type ActivityLevel =

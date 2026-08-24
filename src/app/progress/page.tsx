@@ -12,6 +12,7 @@ import {
   type WeeklyPoint,
   type WeightPoint,
 } from "@/components/progress/charts";
+import { BodyCompositionCard } from "@/components/progress/body-composition-card";
 import { CoachCard } from "@/components/progress/coach-card";
 import { useAuth } from "@/lib/auth-context";
 import { useDailyTotals } from "@/lib/hooks/use-daily-totals";
@@ -313,6 +314,8 @@ export default function ProgressPage() {
             </p>
           ) : null}
         </Card>
+
+        <BodyCompositionCard />
 
         <CoachCard
           weeks={weeks}

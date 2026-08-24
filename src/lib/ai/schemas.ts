@@ -76,3 +76,66 @@ export const coachSchema = z.object({
 });
 
 export type CoachReply = z.infer<typeof coachSchema>;
+
+/**
+ * A smart-scale screenshot.
+ *
+ * Every field is nullable because scales differ in what they display and a
+ * screenshot may be cropped. Null means "not visible in this image" — never
+ * an invented number, which for a health metric would be worse than a gap.
+ */
+export const scaleReadingSchema = z.object({
+  bodyFatPercent: z.number().nullable().describe("Body fat percentage"),
+  bmi: z.number().nullable().describe("BMI"),
+  muscleMassLb: z
+    .number()
+    .nullable()
+    .describe("Muscle mass in POUNDS; convert if the screenshot shows kg"),
+  visceralFat: z.number().nullable().describe("Visceral fat index, unitless"),
+  bodyWaterPercent: z.number().nullable().describe("Body water percentage"),
+  subcutaneousFatPercent: z
+    .number()
+    .nullable()
+    .describe("Subcutaneous fat percentage"),
+  skeletalMusclePercent: z
+    .number()
+    .nullable()
+    .describe("Skeletal muscle percentage"),
+  boneMassLb: z
+    .number()
+    .nullable()
+    .describe("Bone mass in POUNDS; convert if shown in kg"),
+  fatFreeMassLb: z
+    .number()
+    .nullable()
+    .describe("Fat-free body weight in POUNDS; convert if shown in kg"),
+  bmrKcal: z.number().nullable().describe("BMR in kcal"),
+  proteinPercent: z.number().nullable().describe("Protein percentage"),
+  metabolicAge: z.number().nullable().describe("Metabolic age in years"),
+
+  ratings: z
+    .object({
+      bodyFatPercent: z.string().nullable(),
+      bmi: z.string().nullable(),
+      muscleMassLb: z.string().nullable(),
+      visceralFat: z.string().nullable(),
+      bodyWaterPercent: z.string().nullable(),
+      subcutaneousFatPercent: z.string().nullable(),
+      skeletalMusclePercent: z.string().nullable(),
+      boneMassLb: z.string().nullable(),
+      fatFreeMassLb: z.string().nullable(),
+      bmrKcal: z.string().nullable(),
+      proteinPercent: z.string().nullable(),
+      metabolicAge: z.string().nullable(),
+    })
+    .describe(
+      "The device's own word under each metric, copied verbatim: Excellent, Standard, Acceptable, High, and so on. Null where no label is shown.",
+    ),
+
+  unreadable: z
+    .array(z.string())
+    .describe("Names of any metrics visible but too blurred or cropped to read"),
+  notes: z.string().describe("One short sentence on what was read"),
+});
+
+export type ScaleReading = z.infer<typeof scaleReadingSchema>;

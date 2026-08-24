@@ -8,6 +8,11 @@ import { useAuth } from "@/lib/auth-context";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { listLogsForRange } from "@/lib/repo/food-logs";
 import { listWeights } from "@/lib/repo/weight-logs";
+import { listCompositions } from "@/lib/repo/body-composition";
+import {
+  formatMetric,
+  formatPercentChange,
+} from "@/lib/body-composition";
 import {
   buildMonthlyReport,
   describeCoverage,
@@ -44,12 +49,20 @@ export default function MonthlyReportPage() {
     setError(null);
     setReport(null);
     try {
-      const [logs, weights] = await Promise.all([
+      const [logs, weights, compositions] = await Promise.all([
         listLogsForRange(user.uid, bounds.from, bounds.to),
         listWeights(user.uid, 400),
+        listCompositions(user.uid),
       ]);
       setReport(
-        buildMonthlyReport(bounds.from, bounds.to, logs, weights, targets),
+        buildMonthlyReport(
+          bounds.from,
+          bounds.to,
+          logs,
+          weights,
+          targets,
+          compositions,
+        ),
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not build the report.");
@@ -292,6 +305,80 @@ function ReportDocument({
           <CoverageNote label="Sodium" stat={r.sodiumMg} />
         </div>
       </Section>
+
+      {r.composition ? (
+        <Section title="Body composition">
+          <table>
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Current</th>
+                <th>Change</th>
+                <th>Device rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              {r.composition.changes.map((c) => (
+                <tr key={c.def.key}>
+                  <td>
+                    {c.def.label}
+                    {c.def.unit ? ` (${c.def.unit})` : ""}
+                  </td>
+                  <td>{formatMetric(c.current, c.def)}</td>
+                  <td>
+                    {c.percentChange == null
+                      ? "—"
+                      : `${formatPercentChange(c.percentChange)}${
+                          c.favorable === true
+                            ? " ✓"
+                            : c.favorable === false
+                              ? " ✗"
+                              : ""
+                        }`}
+                  </td>
+                  <td>{c.rating ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <p className="muted-ink mt-2 text-[11px]">
+            Measured by a consumer bioimpedance scale on{" "}
+            {format(fromDateKey(r.composition.current.date), "MMMM d, yyyy")}
+            {r.composition.previous
+              ? `, compared against ${format(
+                  fromDateKey(r.composition.previous.date),
+                  "MMMM d, yyyy",
+                )}`
+              : " with no earlier reading to compare against"}
+            . These devices estimate composition from electrical impedance and
+            drift with hydration, recent meals and time of day; single readings
+            are indicative rather than diagnostic. Ratings are the device&apos;s own
+            wording, not a clinical assessment. A ✓ marks movement toward a lean
+            gain, ✗ away from it; BMI is left unmarked because a rise is the
+            intended result of gaining weight.
+          </p>
+
+          {r.composition.against.length > 0 ? (
+            <div className="mt-3 rounded-[8px] border border-[#e6cfcf] bg-[#fdf3f3] px-4 py-3">
+              <p className="text-[12px] font-[600]">Moving away from the goal</p>
+              <ul className="mt-1.5 space-y-1">
+                {r.composition.against.map((c) => (
+                  <li key={c.def.key} className="muted-ink text-[12px]">
+                    <strong>{c.def.label}</strong>{" "}
+                    {formatPercentChange(c.percentChange)} — {c.def.note}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="muted-ink mt-3 text-[12px]">
+              No metric moved against the goal by more than 1% since the
+              previous reading.
+            </p>
+          )}
+        </Section>
+      ) : null}
 
       {r.topSodium.length > 0 ? (
         <Section title="Largest sodium sources">
