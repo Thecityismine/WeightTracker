@@ -22,7 +22,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] pb-safe"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] pb-safe md:hidden"
       style={{
         background: "rgba(9, 12, 16, 0.86)",
         backdropFilter: "blur(20px)",

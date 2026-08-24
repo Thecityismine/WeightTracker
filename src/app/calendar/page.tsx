@@ -79,17 +79,19 @@ export default function CalendarPage() {
 
   if (!mounted) {
     return (
-      <main className="mx-auto max-w-lg">
+      <main className="mx-auto max-w-lg lg:max-w-5xl lg:px-6">
         <PageHeader title="Calendar" />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg lg:max-w-5xl lg:px-6">
       <PageHeader title="Calendar" />
 
-      <div className="px-4">
+      {/* Month grid and the selected day sit side by side once there is room. */}
+      <div className="px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:items-start lg:gap-6 lg:px-0">
+        <div>
         {/* ------------------------------------------------ month header */}
         <div className="mb-3 flex items-center justify-between">
           <button
@@ -179,7 +181,11 @@ export default function CalendarPage() {
           Monthly report
         </Link>
 
-        <SelectedDay date={selected} targetsCalories={targets.calories} />
+        </div>
+
+        <div className="lg:sticky lg:top-6">
+          <SelectedDay date={selected} targetsCalories={targets.calories} />
+        </div>
       </div>
     </main>
   );

@@ -143,7 +143,7 @@ export default function TemplatesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg lg:max-w-4xl">
       <header className="px-4 pb-1 pt-8">
         <Link
           href="/settings"
@@ -158,7 +158,7 @@ export default function TemplatesPage() {
         subtitle="Log a whole meal in one tap"
       />
 
-      <div className="space-y-4 px-4 pb-10">
+      <div className="space-y-4 px-4 pb-10 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
         <button
           type="button"
           onClick={() => void handleCreateBlank()}

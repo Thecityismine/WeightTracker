@@ -99,7 +99,7 @@ export default function SettingsPage() {
 
   if (profileLoading) {
     return (
-      <main className="mx-auto max-w-lg">
+      <main className="mx-auto max-w-lg lg:max-w-2xl">
         <PageHeader title="Settings" />
         <p className="px-5 text-[13px] text-muted">Loading…</p>
       </main>
@@ -110,7 +110,7 @@ export default function SettingsPage() {
   const toGo = draft.goalWeight - (average7 ?? latest?.weight ?? draft.startingWeight);
 
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg lg:max-w-2xl">
       <PageHeader title="Settings" />
 
       <div className="space-y-6 px-4">

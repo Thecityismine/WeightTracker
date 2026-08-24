@@ -88,9 +88,17 @@ export function Sheet({
         className={cn(
           "absolute inset-x-0 bottom-0 mx-auto flex max-w-lg flex-col",
           "rounded-t-[24px] border-t border-white/10",
-          "transition-transform duration-250 ease-out will-change-transform",
+          "transition-all duration-250 ease-out will-change-transform",
           fullHeight ? "h-[92dvh]" : "max-h-[85dvh]",
           open ? "translate-y-0" : "translate-y-full",
+          // On a large screen a sheet welded to the bottom edge reads as a
+          // phone control. Centre it as a dialog instead, and fade rather
+          // than slide, since there is no bottom edge to slide from.
+          "md:inset-y-0 md:my-auto md:h-fit md:rounded-[20px] md:border",
+          fullHeight ? "md:max-h-[84vh]" : "md:max-h-[80vh]",
+          open
+            ? "md:translate-y-0 md:opacity-100"
+            : "md:translate-y-2 md:opacity-0",
         )}
         style={{ background: "var(--background-secondary)" }}
       >

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { LoginScreen } from "./login-screen";
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { SideNav } from "@/components/nav/side-nav";
 import { FoodPickerProvider } from "@/lib/food-picker-context";
 import { AddFoodSheet } from "@/components/food-picker/add-food-sheet";
 
@@ -25,10 +26,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   return (
     <FoodPickerProvider>
-      {/* Bottom padding clears the nav bar plus the home indicator. */}
-      <div className="min-h-dvh pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
+      {/* Rail on tablet and desktop, bottom bar on phones — never both. */}
+      <SideNav />
+
+      {/*
+        Bottom padding clears the nav bar and home indicator on phones. From
+        `md` the rail takes over, so the padding goes and the content shifts
+        clear of the rail instead.
+      */}
+      <div className="min-h-dvh pb-[calc(80px+env(safe-area-inset-bottom,0px))] md:pb-10 md:pl-[236px]">
         {children}
       </div>
+
       <BottomNav />
       <AddFoodSheet />
     </FoodPickerProvider>

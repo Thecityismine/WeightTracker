@@ -6,7 +6,7 @@ import { FoodForm, blankFood } from "@/components/foods/food-form";
 
 export default function NewFoodPage() {
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg lg:max-w-2xl">
       <header className="px-4 pb-3 pt-8">
         <Link
           href="/foods"

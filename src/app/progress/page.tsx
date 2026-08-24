@@ -138,20 +138,21 @@ export default function ProgressPage() {
 
   if (!mounted) {
     return (
-      <main className="mx-auto max-w-lg">
+      <main className="mx-auto max-w-lg lg:max-w-5xl lg:px-6">
         <PageHeader title="Progress" />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg lg:max-w-5xl lg:px-6">
       <PageHeader
         title="Progress"
         subtitle={`${formatWeight(startingWeight)} to ${formatWeight(goalWeight)} ${unit}`}
       />
 
-      <div className="space-y-5 px-4 pb-10">
+      {/* Charts pair up once there is width for two to be read side by side. */}
+      <div className="space-y-5 px-4 pb-10 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:px-0">
         {/* ------------------------------------------- weight progress */}
         <Card className="px-5 py-5">
           <SectionLabel>Weight progress</SectionLabel>

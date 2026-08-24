@@ -142,7 +142,7 @@ export default function TodayPage() {
     : null;
 
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg px-0 lg:max-w-5xl lg:px-6">
       <header className="px-5 pb-5 pt-9">
         <h1 className="text-[26px] font-[650] leading-tight tracking-tight text-foreground">
           {mounted ? greeting(hour) : " "}
@@ -226,18 +226,26 @@ export default function TodayPage() {
         </button>
       </header>
 
-      <div className="px-4">
-        <CalorieCard consumed={totals.calories} target={targets.calories} />
+      {/*
+        One column on a phone. From `lg` the day's summary sits in a pinned
+        left column while the meal list scrolls beside it — on a wide screen
+        the numbers you are logging against should stay in view.
+      */}
+      <div className="px-4 lg:grid lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start lg:gap-6 lg:px-0">
+        <div className="lg:sticky lg:top-6">
+          <CalorieCard consumed={totals.calories} target={targets.calories} />
 
-        <MacroCards
-          protein={totals.protein}
-          fat={totals.fat}
-          carbs={totals.carbs}
-          proteinTarget={targets.protein}
-          fatTarget={targets.fat}
-          carbTarget={carbTarget(targets)}
-        />
+          <MacroCards
+            protein={totals.protein}
+            fat={totals.fat}
+            carbs={totals.carbs}
+            proteinTarget={targets.protein}
+            fatTarget={targets.fat}
+            carbTarget={carbTarget(targets)}
+          />
+        </div>
 
+        <div className="lg:pt-0">
         {loading && logs.length === 0 ? (
           <p className="pt-10 text-center text-[13px] text-muted">Loading…</p>
         ) : (
@@ -260,6 +268,7 @@ export default function TodayPage() {
         )}
 
         <div className="h-8" />
+        </div>
       </div>
 
       {toast ? (

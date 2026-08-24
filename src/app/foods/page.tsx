@@ -37,7 +37,7 @@ export default function FoodsPage() {
   }, [foods, term, category, favesOnly, sort]);
 
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg lg:max-w-5xl lg:px-6">
       <PageHeader
         title="Foods"
         subtitle={`${foods.length} in your database`}
@@ -117,7 +117,7 @@ export default function FoodsPage() {
           </Link>
         </div>
 
-        <div className="mt-4 space-y-2 pb-8">
+        <div className="mt-4 space-y-2 pb-8 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0 xl:grid-cols-3">
           {loading ? (
             <p className="pt-8 text-center text-[13px] text-muted">Loading…</p>
           ) : visible.length === 0 ? (

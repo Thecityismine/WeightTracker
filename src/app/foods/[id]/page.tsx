@@ -56,7 +56,7 @@ export default function EditFoodPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-lg">
+      <main className="mx-auto max-w-lg lg:max-w-2xl">
         <p className="px-5 pt-10 text-[13px] text-muted">Loading…</p>
       </main>
     );
@@ -64,7 +64,7 @@ export default function EditFoodPage() {
 
   if (!food) {
     return (
-      <main className="mx-auto max-w-lg px-5 pt-10">
+      <main className="mx-auto max-w-lg px-5 pt-10 lg:max-w-2xl">
         <p className="text-[15px] text-foreground">Food not found.</p>
         <p className="mt-1 text-[13px] text-muted">
           It may have been archived or deleted.
@@ -80,7 +80,7 @@ export default function EditFoodPage() {
   }
 
   return (
-    <main className="mx-auto max-w-lg">
+    <main className="mx-auto max-w-lg lg:max-w-2xl">
       <header className="px-4 pb-3 pt-8">
         <Link
           href="/foods"

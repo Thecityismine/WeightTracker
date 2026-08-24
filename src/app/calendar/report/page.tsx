@@ -80,10 +80,10 @@ export default function MonthlyReportPage() {
     setTimeout(() => setCopied(false), 2200);
   }
 
-  if (!mounted) return <main className="mx-auto max-w-3xl" />;
+  if (!mounted) return <main className="mx-auto max-w-3xl lg:px-6" />;
 
   return (
-    <main className="mx-auto max-w-3xl">
+    <main className="mx-auto max-w-3xl lg:px-6">
       <div className="no-print px-4 pb-2 pt-8">
         <Link
           href="/calendar"
