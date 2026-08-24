@@ -361,16 +361,22 @@ USDA_API_KEY
 
 **Goal:** see consistency at a glance.
 
-- [ ] Month grid on black; each cell shows the day, calories, `132P`, and a **status dot or thin bottom line** — never a filled bright cell
-- [ ] Selected date: translucent blue fill, blue border, soft outer glow
-- [ ] Previous / next month, jump to today
-- [ ] Tap a date to open that day's full log
-- [ ] Weekly summary row beside or beneath each week
-- [ ] **Copy entire day to today**
-- [ ] `scripts/rebuild-daily-totals.ts` — recompute all `dailyTotals` from `foodLogs`
-- [ ] Framing copy: one low day is not a failure; the weekly average is what matters
+- [x] Month grid on black; each cell shows the day, calories, `132P`, and a **thin status line** — never a filled bright cell
+- [x] Selected date: translucent blue fill, blue border, soft outer glow
+- [x] Previous / next month, jump to today; future months disabled
+- [x] Tap a date to open that day's full log, grouped by meal, beneath the grid
+- [x] Weekly summary line under each row: average calories and days on target
+- [x] **Copy this day to today** — copies the snapshots verbatim, so a day reproduces exactly what was eaten even if a label has since been corrected
+- [x] Status derived from the **current** target rather than the stored record, so changing a target recolors history consistently
+- [x] Framing copy: one low day is not a failure; the weekly average moves the scale
+- [x] `scripts/rebuild-daily-totals.mts` — recompute all `dailyTotals` from `foodLogs`
 
-**Done when:** a month of logging is legible in one screen and any past day can be copied forward in one tap.
+### Verified
+
+- [x] Typecheck, lint, 42 tests, and a build with `.env.local` removed all clean
+- [ ] Reading a real month of logging *(needs a few days of data)*
+
+**Done when:** ~~a month of logging is legible in one screen~~ — built and deployed; the grid fills in as you log.
 
 ---
 
