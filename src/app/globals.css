@@ -221,11 +221,41 @@ body {
   box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.12);
 }
 
+/*
+ * iOS zooms the page in whenever a focused control renders text below 16px,
+ * and it does not zoom back out on blur — so every tap into a field left the
+ * layout enlarged. Safari ignores `maximum-scale` for that behaviour, which
+ * makes the font size the only lever that actually works.
+ *
+ * `!important` because these are element selectors and every control also
+ * carries a `text-[14px]`-style utility class, which would otherwise win on
+ * specificity. Scoped to coarse pointers, so mouse-driven layouts keep the
+ * tighter sizes the design asks for.
+ */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* ---------------------------------------------------------------
    Safe areas — the bottom nav must clear the home indicator.
+
+   iOS reports a 34pt bottom inset, sized for content that runs edge to
+   edge. The nav bar already carries 68px of its own chrome above it, so
+   paying the whole inset back left a dead band under the labels and the
+   bar read as hovering above the bottom of the screen. Trim 12px: the
+   home indicator is 5pt tall and sits ~8pt off the bottom edge, so the
+   remaining ~22pt still clears it comfortably.
    --------------------------------------------------------------- */
+:root {
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px) - 12px, 0px);
+}
+
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--safe-bottom);
 }
 
 .pt-safe {
