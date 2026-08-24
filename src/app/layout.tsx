@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   description: "Muscle gain food tracker",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    // "black" lets the OS reserve the status bar strip and paint it to match
+    // themeColor. "black-translucent" hands that job to the app, which means
+    // getting insets right on every device — and getting them wrong shows up
+    // as content under the clock or a mismatched bar above it.
+    statusBarStyle: "black",
     title: "Tracker",
   },
 };
@@ -30,7 +34,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   // No pinch-zoom on a data entry app — it only ever fires by accident.
   maximumScale: 1,
-  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

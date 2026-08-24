@@ -163,6 +163,10 @@ body {
   background: linear-gradient(90deg, #d99a24, #f5b942);
 }
 
+.progress-carbs {
+  background: linear-gradient(90deg, #1fa89a, #2dd4bf);
+}
+
 /* ---------------------------------------------------------------
    Buttons
    --------------------------------------------------------------- */

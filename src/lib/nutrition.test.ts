@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  carbTarget,
   computeExtendedMacros,
   computeLogMacros,
   dayStatus,
@@ -318,5 +319,30 @@ describe("computeExtendedMacros", () => {
       cholesterolMg: null,
       sodiumMg: null,
     });
+  });
+});
+
+describe("carbTarget", () => {
+  it("is whatever calories protein and fat leave behind", () => {
+    // 2800 - (130 x 4) - (80 x 9) = 1560 kcal, and 1560 / 4 = 390 g.
+    expect(carbTarget({ calories: 2800, protein: 130, fat: 80 })).toBe(390);
+  });
+
+  it("moves with the calorie target", () => {
+    expect(carbTarget({ calories: 2950, protein: 130, fat: 80 })).toBeCloseTo(
+      427.5,
+      5,
+    );
+  });
+
+  it("shrinks when protein or fat rise", () => {
+    const base = carbTarget({ calories: 2800, protein: 130, fat: 80 });
+    const higherProtein = carbTarget({ calories: 2800, protein: 180, fat: 80 });
+    expect(higherProtein).toBeLessThan(base);
+  });
+
+  it("floors at zero rather than going negative", () => {
+    // Protein and fat alone already exceed the calorie budget.
+    expect(carbTarget({ calories: 1000, protein: 200, fat: 100 })).toBe(0);
   });
 });

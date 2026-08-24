@@ -16,7 +16,7 @@ import { useWeights } from "@/lib/hooks/use-weights";
 import { useMounted } from "@/lib/use-mounted";
 import { copyMeal, deleteLog, updateLogQuantity } from "@/lib/repo/food-logs";
 import { createTemplate } from "@/lib/repo/meal-templates";
-import { formatWeight, sumMacros } from "@/lib/nutrition";
+import { carbTarget, formatWeight, sumMacros } from "@/lib/nutrition";
 import { MEAL_CATEGORIES, MEAL_LABELS, type MealCategory } from "@/lib/constants";
 import {
   daysSince,
@@ -50,6 +50,7 @@ export default function TodayPage() {
       calories: l.caloriesSnapshot,
       protein: l.proteinSnapshot,
       fat: l.fatSnapshot,
+      carbs: l.carbsSnapshot,
     })),
   );
 
@@ -209,8 +210,10 @@ export default function TodayPage() {
         <MacroCards
           protein={totals.protein}
           fat={totals.fat}
+          carbs={totals.carbs}
           proteinTarget={targets.protein}
           fatTarget={targets.fat}
+          carbTarget={carbTarget(targets)}
         />
 
         {loading && logs.length === 0 ? (

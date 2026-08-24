@@ -174,6 +174,26 @@ export function dayStatus(
   return "surplus";
 }
 
+/**
+ * Carbohydrate target, derived rather than configured.
+ *
+ * Protein and fat are set for their own reasons — muscle synthesis and
+ * hormonal floor. Carbohydrate is what fills the calories those two leave
+ * behind, so a separate carb setting would only ever be a fourth number that
+ * could contradict the other three. Deriving it keeps them consistent by
+ * construction:
+ *
+ *   carbTarget = (calories - protein x 4 - fat x 9) / 4
+ *
+ * Returns 0 rather than a negative when protein and fat alone already exceed
+ * the calorie target — an impossible target, not a negative one.
+ */
+export function carbTarget(targets: MacroTargets): number {
+  const remainingCalories =
+    targets.calories - targets.protein * 4 - targets.fat * 9;
+  return Math.max(0, remainingCalories / 4);
+}
+
 /** True once the calorie target is met — the moment blue becomes green. */
 export function isTargetReached(consumed: number, target: number): boolean {
   return target > 0 && consumed >= target;
