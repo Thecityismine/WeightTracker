@@ -332,15 +332,22 @@ USDA_API_KEY
 
 **Goal:** know whether any of this is working.
 
-- [ ] Settings: starting weight, goal weight, start date, target date, height, birth date, sex, activity level, workout days, weight unit
-- [ ] Editable daily targets (calories, protein, fat), defaulting to 2,800 / 130 / 80
-- [ ] Weight entry — one per day; the doc id is the date, so re-entry overwrites cleanly
-- [ ] Optional note and waist measurement
-- [ ] Morning weigh-in guidance on the entry screen
-- [ ] Weight prompt on the Today header when today's weight is missing
-- [ ] Seven-day rolling average computed and stored alongside each entry
+- [x] Settings profile: name, starting weight, goal weight, start date, birthday, height, activity level, workouts per week, weight unit
+- [x] Editable daily targets (calories, protein, fat) with numeric steppers, per DESIGN.md — tapping beats summoning a keyboard
+- [x] Changing a target updates Today immediately; past days keep the numbers they were logged against
+- [x] Weight entry sheet — one per day, date as the document id, so re-entry overwrites instead of duplicating
+- [x] Optional waist measurement and note; delete an entry
+- [x] Morning weigh-in guidance on the sheet
+- [x] Weight chip on the Today header — **amber when today's weigh-in is missing**, tap to log
+- [x] Seven-day average and day counter beside it
+- [x] Settings form derived from the stored profile plus local edits, so a background snapshot never clobbers half-finished typing
 
-**Done when:** weight can be entered in two taps and the seven-day average appears on the Today header.
+### Verified
+
+- [x] Typecheck, lint, 42 tests, and a build with `.env.local` removed all clean
+- [ ] Entering a real weigh-in *(yours to confirm)*
+
+**Done when:** ~~weight can be entered in two taps~~ — built and deployed; confirm the seven-day average appears on the Today header once you have a few weigh-ins.
 
 ---
 

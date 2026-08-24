@@ -1,21 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Scale } from "lucide-react";
 import { CalorieCard } from "@/components/today/calorie-card";
 import { MacroCards } from "@/components/today/macro-cards";
 import { MealSection } from "@/components/today/meal-section";
 import { QuantitySheet } from "@/components/food-picker/quantity-sheet";
+import { WeightSheet } from "@/components/weight/weight-sheet";
 import { useAuth } from "@/lib/auth-context";
 import { useFoodPicker } from "@/lib/food-picker-context";
 import { useDayLogs } from "@/lib/hooks/use-day-logs";
 import { useFoods } from "@/lib/hooks/use-foods";
 import { useProfile } from "@/lib/hooks/use-profile";
+import { useWeights } from "@/lib/hooks/use-weights";
 import { useMounted } from "@/lib/use-mounted";
 import { deleteLog, updateLogQuantity } from "@/lib/repo/food-logs";
-import { sumMacros } from "@/lib/nutrition";
+import { formatWeight, sumMacros } from "@/lib/nutrition";
 import { MEAL_CATEGORIES } from "@/lib/constants";
 import {
+  daysSince,
   formatLongDate,
   isToday,
   shiftDateKey,
@@ -32,8 +35,10 @@ export default function TodayPage() {
   const [date, setDate] = useState<DateKey>(todayKey());
   const [editing, setEditing] = useState<FoodLog | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [weighing, setWeighing] = useState(false);
 
-  const { targets } = useProfile(user?.uid ?? null);
+  const { profile, targets } = useProfile(user?.uid ?? null);
+  const { latest, average7, forDate } = useWeights(user?.uid ?? null);
   const { logs, loading } = useDayLogs(user?.uid ?? null, date);
   const { foods } = useFoods(user?.uid ?? null);
 
@@ -44,6 +49,9 @@ export default function TodayPage() {
       fat: l.fatSnapshot,
     })),
   );
+
+  const weightToday = forDate(date);
+  const unit = profile?.weightUnit ?? "lb";
 
   const hour = mounted ? new Date().getHours() : 12;
   const isEvening = hour >= 17;
@@ -113,6 +121,57 @@ export default function TodayPage() {
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Weight is the secondary metric — present, never competing with
+            the calorie counter for attention. */}
+        <button
+          type="button"
+          onClick={() => setWeighing(true)}
+          className="pressable mt-3 flex items-center gap-2.5"
+        >
+          <span
+            className="flex h-8 items-center gap-1.5 rounded-full border px-3"
+            style={{
+              borderColor: weightToday
+                ? "rgba(255,255,255,0.08)"
+                : "rgba(255,181,71,0.35)",
+              background: weightToday
+                ? "var(--surface)"
+                : "rgba(255,181,71,0.08)",
+            }}
+          >
+            <Scale
+              className="h-3.5 w-3.5"
+              style={{
+                color: weightToday ? "var(--text-muted)" : "var(--warning)",
+              }}
+            />
+            <span
+              className="metric text-[13px]"
+              style={{
+                color: weightToday ? "var(--text-primary)" : "var(--warning)",
+              }}
+            >
+              {weightToday
+                ? `${formatWeight(weightToday.weight)} ${unit}`
+                : isToday(date)
+                  ? "Log weight"
+                  : "No weigh-in"}
+            </span>
+          </span>
+
+          {average7 != null ? (
+            <span className="metric text-[12px] text-muted">
+              {formatWeight(average7)} {unit} avg
+            </span>
+          ) : null}
+
+          {profile ? (
+            <span className="metric text-[12px] text-muted">
+              Day {daysSince(profile.startingDate)}
+            </span>
+          ) : null}
+        </button>
       </header>
 
       <div className="px-4">
@@ -144,6 +203,21 @@ export default function TodayPage() {
 
         <div className="h-8" />
       </div>
+
+      <WeightSheet
+        key={`w-${date}-${weightToday?.weight ?? "none"}`}
+        open={weighing}
+        date={date}
+        existing={weightToday}
+        suggested={
+          weightToday?.weight ??
+          latest?.weight ??
+          profile?.startingWeight ??
+          144
+        }
+        unit={unit}
+        onClose={() => setWeighing(false)}
+      />
 
       <QuantitySheet
         key={editing?.id ?? "none"}
