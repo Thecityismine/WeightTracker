@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
 
+  // firebase-admin must not be bundled: it is CommonJS with native-ish deps,
+  // and bundling it is what surfaced jwks-rsa's require() of ESM-only jose.
+  // The jose override in package.json pins the dual-format v5; this keeps
+  // Node resolving the package normally on top of that.
+  serverExternalPackages: ["firebase-admin"],
+
   images: {
     // Label photos are served from Firebase Storage.
     remotePatterns: [
