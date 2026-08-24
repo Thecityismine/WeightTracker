@@ -42,6 +42,10 @@ export function blankFood(): FoodInput {
     fatPerServing: 0,
     carbsPerServing: 0,
     fiberPerServing: 0,
+    sugarPerServing: null,
+    saturatedFatPerServing: null,
+    cholesterolMgPerServing: null,
+    sodiumMgPerServing: null,
     dataSource: "manual",
     externalFoodId: null,
     verificationStatus: "user_entered",
@@ -66,6 +70,10 @@ export function toInput(food: Food): FoodInput {
     fatPerServing: food.fatPerServing,
     carbsPerServing: food.carbsPerServing,
     fiberPerServing: food.fiberPerServing,
+    sugarPerServing: food.sugarPerServing ?? null,
+    saturatedFatPerServing: food.saturatedFatPerServing ?? null,
+    cholesterolMgPerServing: food.cholesterolMgPerServing ?? null,
+    sodiumMgPerServing: food.sodiumMgPerServing ?? null,
     dataSource: food.dataSource,
     externalFoodId: food.externalFoodId,
     verificationStatus: food.verificationStatus,
@@ -290,6 +298,62 @@ export function FoodForm({
           </Field>
         </div>
 
+        <p className="label-metric mt-5">Also on the label</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted">
+          Optional. Leave blank when the label does not list it — blank means
+          unknown, which is not the same as zero.
+        </p>
+
+        <div className="mt-1 grid grid-cols-2 gap-3">
+          <Field label="Sugar (g)" htmlFor="sug">
+            <NumberField
+              id="sug"
+              step="0.1"
+              value={draft.sugarPerServing ?? null}
+              onChange={(v) => set("sugarPerServing", v)}
+              allowNull
+              onNull={() => set("sugarPerServing", null)}
+              placeholder="—"
+              className="input h-11 w-full px-3 text-[15px]"
+            />
+          </Field>
+          <Field label="Saturated fat (g)" htmlFor="sat">
+            <NumberField
+              id="sat"
+              step="0.1"
+              value={draft.saturatedFatPerServing ?? null}
+              onChange={(v) => set("saturatedFatPerServing", v)}
+              allowNull
+              onNull={() => set("saturatedFatPerServing", null)}
+              placeholder="—"
+              className="input h-11 w-full px-3 text-[15px]"
+            />
+          </Field>
+          {/* Labels print these two in milligrams, so the field says so. */}
+          <Field label="Cholesterol (mg)" htmlFor="chol">
+            <NumberField
+              id="chol"
+              value={draft.cholesterolMgPerServing ?? null}
+              onChange={(v) => set("cholesterolMgPerServing", v)}
+              allowNull
+              onNull={() => set("cholesterolMgPerServing", null)}
+              placeholder="—"
+              className="input h-11 w-full px-3 text-[15px]"
+            />
+          </Field>
+          <Field label="Sodium (mg)" htmlFor="sod">
+            <NumberField
+              id="sod"
+              value={draft.sodiumMgPerServing ?? null}
+              onChange={(v) => set("sodiumMgPerServing", v)}
+              allowNull
+              onNull={() => set("sodiumMgPerServing", null)}
+              placeholder="—"
+              className="input h-11 w-full px-3 text-[15px]"
+            />
+          </Field>
+        </div>
+
         {/* Live preview — what one serving will actually count as. */}
         <div className="mt-3 rounded-[12px] border border-white/[0.06] bg-surface/50 px-4 py-3">
           <p className="text-[12px] text-muted">
@@ -306,6 +370,29 @@ export function FoodForm({
               {formatMacro(draft.fatPerServing)}g F
             </span>
           </p>
+          {draft.sodiumMgPerServing != null ||
+          draft.sugarPerServing != null ||
+          draft.saturatedFatPerServing != null ||
+          draft.cholesterolMgPerServing != null ? (
+            <p className="metric mt-1 text-[12px] text-muted">
+              {[
+                draft.sugarPerServing != null
+                  ? `${formatMacro(draft.sugarPerServing)}g sugar`
+                  : null,
+                draft.saturatedFatPerServing != null
+                  ? `${formatMacro(draft.saturatedFatPerServing)}g sat fat`
+                  : null,
+                draft.cholesterolMgPerServing != null
+                  ? `${formatMacro(draft.cholesterolMgPerServing)}mg chol`
+                  : null,
+                draft.sodiumMgPerServing != null
+                  ? `${formatMacro(draft.sodiumMgPerServing)}mg sodium`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("  ·  ")}
+            </p>
+          ) : null}
         </div>
 
         {draft.verificationStatus === "ai_estimated" ? (

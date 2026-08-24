@@ -25,6 +25,10 @@ const N = {
   carbs: "205",
   calories: "208",
   fiber: "291",
+  sugar: "269",
+  saturatedFat: "606",
+  cholesterol: "601",
+  sodium: "307",
 } as const;
 
 export type UsdaSearchHit = {
@@ -41,6 +45,14 @@ export type ServingOption = {
   grams: number | null;
 };
 
+/** The secondary label values, per 100 g or per serving depending on source. */
+export type ExtendedValues = {
+  sugar: number | null;
+  saturatedFat: number | null;
+  cholesterolMg: number | null;
+  sodiumMg: number | null;
+};
+
 export type UsdaFoodDetail = {
   fdcId: number;
   name: string;
@@ -48,8 +60,12 @@ export type UsdaFoodDetail = {
   dataType: string;
   /** Present for Foundation / SR Legacy foods. */
   per100g: MacroSet | null;
+  /** Secondary values per 100 g, for the same foods as `per100g`. */
+  extendedPer100g: ExtendedValues;
   /** Present for Branded foods, taken from the label. */
-  labelServing: (MacroSet & { description: string; grams: number | null }) | null;
+  labelServing:
+    | (MacroSet & ExtendedValues & { description: string; grams: number | null })
+    | null;
   servingOptions: ServingOption[];
 };
 
@@ -79,6 +95,39 @@ export function extractPer100g(nutrients: RawNutrient[]): MacroSet | null {
     fat: get(N.fat) ?? 0,
     carbs: get(N.carbs) ?? 0,
     fiber: get(N.fiber) ?? 0,
+  };
+}
+
+/** Pull the secondary values, leaving anything absent as null. */
+export function extractExtended(nutrients: RawNutrient[]): ExtendedValues {
+  const get = (num: string): number | null => {
+    const hit = nutrients.find(
+      (n) => (n.nutrientNumber ?? n.nutrient?.number) === num,
+    );
+    const value = hit?.amount ?? hit?.value;
+    return typeof value === "number" ? value : null;
+  };
+
+  return {
+    sugar: get(N.sugar),
+    saturatedFat: get(N.saturatedFat),
+    cholesterolMg: get(N.cholesterol),
+    sodiumMg: get(N.sodium),
+  };
+}
+
+/** Scale the secondary values, keeping unknowns unknown. */
+export function extendedForGrams(
+  per100g: ExtendedValues,
+  grams: number,
+): ExtendedValues {
+  const f = grams / 100;
+  const scale = (v: number | null) => (v == null ? null : v * f);
+  return {
+    sugar: scale(per100g.sugar),
+    saturatedFat: scale(per100g.saturatedFat),
+    cholesterolMg: scale(per100g.cholesterolMg),
+    sodiumMg: scale(per100g.sodiumMg),
   };
 }
 
@@ -119,6 +168,7 @@ export function mapDetail(raw: RawDetail): UsdaFoodDetail {
   const dataType = raw.dataType ?? "Unknown";
 
   const per100g = extractPer100g(raw.foodNutrients ?? []);
+  const extendedPer100g = extractExtended(raw.foodNutrients ?? []);
 
   // Branded foods carry the label values directly, per serving.
   let labelServing: UsdaFoodDetail["labelServing"] = null;
@@ -141,6 +191,11 @@ export function mapDetail(raw: RawDetail): UsdaFoodDetail {
       fat: ln.fat?.value ?? 0,
       carbs: ln.carbohydrates?.value ?? 0,
       fiber: ln.fiber?.value ?? 0,
+      // Absent on the label means unknown, not zero.
+      sugar: ln.sugars?.value ?? null,
+      saturatedFat: ln.saturatedFat?.value ?? null,
+      cholesterolMg: ln.cholesterol?.value ?? null,
+      sodiumMg: ln.sodium?.value ?? null,
     };
   }
 
@@ -174,6 +229,7 @@ export function mapDetail(raw: RawDetail): UsdaFoodDetail {
     brand,
     dataType,
     per100g,
+    extendedPer100g,
     labelServing,
     servingOptions: dedupe(servingOptions),
   };
@@ -204,6 +260,12 @@ export function toFoodInput(
   option: ServingOption,
 ): FoodInput | null {
   let macros: MacroSet | null = null;
+  let extra: ExtendedValues = {
+    sugar: null,
+    saturatedFat: null,
+    cholesterolMg: null,
+    sodiumMg: null,
+  };
 
   // Prefer the label's own serving when that is what was picked.
   if (
@@ -211,13 +273,18 @@ export function toFoodInput(
     option.description === detail.labelServing.description
   ) {
     macros = detail.labelServing;
+    extra = detail.labelServing;
   } else if (detail.per100g && option.grams != null) {
     macros = macrosForGrams(detail.per100g, option.grams);
+    extra = extendedForGrams(detail.extendedPer100g, option.grams);
   } else if (detail.labelServing) {
     macros = detail.labelServing;
+    extra = detail.labelServing;
   }
 
   if (!macros) return null;
+
+  const round1 = (v: number | null) => (v == null ? null : round(v, 1));
 
   return {
     name: titleCase(detail.name),
@@ -232,6 +299,10 @@ export function toFoodInput(
     fatPerServing: round(macros.fat, 1),
     carbsPerServing: round(macros.carbs, 1),
     fiberPerServing: round(macros.fiber, 1),
+    sugarPerServing: round1(extra.sugar),
+    saturatedFatPerServing: round1(extra.saturatedFat),
+    cholesterolMgPerServing: round1(extra.cholesterolMg),
+    sodiumMgPerServing: round1(extra.sodiumMg),
     dataSource: detail.dataType === "Branded" ? "usda_branded" : "usda_generic",
     externalFoodId: String(detail.fdcId),
     verificationStatus: "usda_verified",

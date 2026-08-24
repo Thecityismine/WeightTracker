@@ -52,7 +52,26 @@ export type ServingNutrition = {
   fiberPerServing: number;
 };
 
-export type Food = ServingNutrition & {
+/**
+ * Secondary label values.
+ *
+ * Nullable on purpose, unlike the five core macros. These are often absent —
+ * no seed food has them, and USDA generic records frequently omit them. Null
+ * means "not known", which is a different claim from zero, and defaulting an
+ * unknown sodium figure to 0 would quietly understate a day's total.
+ *
+ * UNITS: sugar and saturated fat in GRAMS; cholesterol and sodium in
+ * MILLIGRAMS, matching how a nutrition label prints them.
+ */
+export type ExtendedNutrition = {
+  sugarPerServing: number | null;
+  saturatedFatPerServing: number | null;
+  cholesterolMgPerServing: number | null;
+  sodiumMgPerServing: number | null;
+};
+
+export type Food = ServingNutrition &
+  ExtendedNutrition & {
   id: string;
   userId: string;
   name: string;
@@ -110,6 +129,12 @@ export type FoodLog = {
   fatSnapshot: number;
   carbsSnapshot: number;
   fiberSnapshot: number;
+
+  // Null when the food had no value recorded — never silently zero.
+  sugarSnapshot: number | null;
+  saturatedFatSnapshot: number | null;
+  cholesterolMgSnapshot: number | null;
+  sodiumMgSnapshot: number | null;
 
   createdAt: string;
   updatedAt: string;

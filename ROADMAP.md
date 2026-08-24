@@ -123,6 +123,12 @@ aiFoodSearches/{searchId}
   confidenceScore, approved, createdAt
 ```
 
+**Secondary label values** (added 2026-08-24): `sugarPerServing`, `saturatedFatPerServing` in **grams**; `cholesterolMgPerServing`, `sodiumMgPerServing` in **milligrams**, matching how a label prints them.
+
+These are **nullable**, unlike the five core macros. Null means *not known*, which is a different claim from zero — a food with no sodium on its label must not report 0 mg, or a day of unlabelled foods would total up looking authoritative and be wrong. They scale by quantity and snapshot into logs like everything else, but are deliberately **not** aggregated into `dailyTotals` yet: that is a dashboard decision, and the data is now being captured so it can be turned on without a backfill.
+
+Validation mirrors the fiber rule: sugar cannot exceed total carbohydrate, saturated fat cannot exceed total fat.
+
 **Verification statuses:** `label_verified` · `usda_verified` · `user_entered` · `ai_estimated`
 
 **Meal categories (fixed order):** `breakfast` · `lunch` · `snack` · `shake` · `dinner`

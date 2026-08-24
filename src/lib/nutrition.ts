@@ -1,5 +1,6 @@
 import type {
   DayStatus,
+  ExtendedNutrition,
   MacroSet,
   MacroTargets,
   ServingNutrition,
@@ -53,6 +54,35 @@ export function computeLogMacros(
     fat: food.fatPerServing * quantity,
     carbs: food.carbsPerServing * quantity,
     fiber: food.fiberPerServing * quantity,
+  };
+}
+
+/**
+ * Scale the secondary label values, preserving "unknown".
+ *
+ * Null in means null out. Treating an absent sodium figure as 0 would let a
+ * day of unlabelled foods report a confidently low total — the same species
+ * of quiet wrongness as a mistyped serving size.
+ */
+export type ExtendedMacros = {
+  sugar: number | null;
+  saturatedFat: number | null;
+  cholesterolMg: number | null;
+  sodiumMg: number | null;
+};
+
+export function computeExtendedMacros(
+  food: ExtendedNutrition,
+  quantity: number,
+): ExtendedMacros {
+  assertFinite(quantity, "quantity");
+  const scale = (v: number | null) => (v == null ? null : v * quantity);
+
+  return {
+    sugar: scale(food.sugarPerServing),
+    saturatedFat: scale(food.saturatedFatPerServing),
+    cholesterolMg: scale(food.cholesterolMgPerServing),
+    sodiumMg: scale(food.sodiumMgPerServing),
   };
 }
 

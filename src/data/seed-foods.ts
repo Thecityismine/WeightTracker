@@ -1,4 +1,4 @@
-import type { FoodInput } from "@/lib/schemas";
+import type { FoodDraft } from "@/lib/schemas";
 
 /**
  * Starter food database — the foods eaten regularly, entered from labels and
@@ -14,7 +14,7 @@ import type { FoodInput } from "@/lib/schemas";
  * Anything marked usda_verified for a *branded* product should be replaced by
  * label data the next time the package is in reach. Values vary by brand.
  */
-export const SEED_FOODS: FoodInput[] = [
+export const SEED_FOODS: FoodDraft[] = [
   // ---------------------------------------------------------------- protein
   {
     name: "Egg, large",

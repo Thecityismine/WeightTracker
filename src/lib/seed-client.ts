@@ -3,6 +3,7 @@
 import { collection, getDocs, query, where, writeBatch, doc } from "firebase/firestore";
 import { getDb } from "./firebase";
 import { SEED_FOODS } from "@/data/seed-foods";
+import { foodInputSchema } from "./schemas";
 
 /**
  * Load the starter foods from inside the app.
@@ -44,8 +45,10 @@ export async function loadStarterFoods(
   for (let i = 0; i < missing.length; i += 400) {
     const batch = writeBatch(db);
     for (const food of missing.slice(i, i + 400)) {
+      // Parse rather than spread raw: this applies the schema defaults, so a
+      // newly added optional field is stored as null instead of missing.
       batch.set(doc(collection(db, "foods")), {
-        ...food,
+        ...foodInputSchema.parse(food),
         userId,
         useCount: 0,
         lastUsedAt: null,

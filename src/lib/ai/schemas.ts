@@ -26,6 +26,23 @@ export const aiFoodSchema = z.object({
   carbsPerServing: z.number().describe("Carbohydrate grams in ONE serving"),
   fiberPerServing: z.number().describe("Fiber grams in ONE serving"),
 
+  sugarPerServing: z
+    .number()
+    .nullable()
+    .describe("Total sugar GRAMS in one serving, or null if not known"),
+  saturatedFatPerServing: z
+    .number()
+    .nullable()
+    .describe("Saturated fat GRAMS in one serving, or null if not known"),
+  cholesterolMgPerServing: z
+    .number()
+    .nullable()
+    .describe("Cholesterol MILLIGRAMS in one serving, or null if not known"),
+  sodiumMgPerServing: z
+    .number()
+    .nullable()
+    .describe("Sodium MILLIGRAMS in one serving, or null if not known"),
+
   confidence: z
     .enum(["high", "medium", "low"])
     .describe(

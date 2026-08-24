@@ -12,7 +12,12 @@ import {
   where,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
-import { computeLogMacros, dayStatus, sumMacros } from "@/lib/nutrition";
+import {
+  computeExtendedMacros,
+  computeLogMacros,
+  dayStatus,
+  sumMacros,
+} from "@/lib/nutrition";
 import { foodLogInputSchema, type FoodLogInput } from "@/lib/schemas";
 import type { DateKey } from "@/lib/dates";
 import type { MealCategory } from "@/lib/constants";
@@ -57,6 +62,7 @@ export async function addLog(
 ): Promise<string> {
   const parsed = foodLogInputSchema.parse(input);
   const macros = computeLogMacros(food, parsed.quantity);
+  const extra = computeExtendedMacros(food, parsed.quantity);
   // ISO strings rather than serverTimestamp(): a pending server timestamp
   // reads as null locally, so an optimistic row would sort to the top and
   // then visibly jump once the write lands. Single user, so no clock skew.
@@ -76,6 +82,11 @@ export async function addLog(
     fatSnapshot: macros.fat,
     carbsSnapshot: macros.carbs,
     fiberSnapshot: macros.fiber,
+
+    sugarSnapshot: extra.sugar,
+    saturatedFatSnapshot: extra.saturatedFat,
+    cholesterolMgSnapshot: extra.cholesterolMg,
+    sodiumMgSnapshot: extra.sodiumMg,
 
     createdAt: now,
     updatedAt: now,
@@ -149,6 +160,7 @@ export async function addLogs(
 
   for (const { food, quantity, mealCategory } of entries) {
     const macros = computeLogMacros(food, quantity);
+    const extra = computeExtendedMacros(food, quantity);
     await addDoc(collection(getDb(), LOGS), {
       userId,
       foodId: food.id,
@@ -163,6 +175,11 @@ export async function addLogs(
       fatSnapshot: macros.fat,
       carbsSnapshot: macros.carbs,
       fiberSnapshot: macros.fiber,
+
+      sugarSnapshot: extra.sugar,
+      saturatedFatSnapshot: extra.saturatedFat,
+      cholesterolMgSnapshot: extra.cholesterolMg,
+      sodiumMgSnapshot: extra.sodiumMg,
 
       createdAt: now,
       updatedAt: now,
@@ -209,6 +226,11 @@ export async function copyMeal(
       carbsSnapshot: log.carbsSnapshot,
       fiberSnapshot: log.fiberSnapshot,
 
+      sugarSnapshot: log.sugarSnapshot ?? null,
+      saturatedFatSnapshot: log.saturatedFatSnapshot ?? null,
+      cholesterolMgSnapshot: log.cholesterolMgSnapshot ?? null,
+      sodiumMgSnapshot: log.sodiumMgSnapshot ?? null,
+
       createdAt: now,
       updatedAt: now,
     });
@@ -251,6 +273,11 @@ export async function copyDay(
       fatSnapshot: log.fatSnapshot,
       carbsSnapshot: log.carbsSnapshot,
       fiberSnapshot: log.fiberSnapshot,
+
+      sugarSnapshot: log.sugarSnapshot ?? null,
+      saturatedFatSnapshot: log.saturatedFatSnapshot ?? null,
+      cholesterolMgSnapshot: log.cholesterolMgSnapshot ?? null,
+      sodiumMgSnapshot: log.sodiumMgSnapshot ?? null,
 
       createdAt: now,
       updatedAt: now,

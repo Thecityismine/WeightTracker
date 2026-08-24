@@ -19,6 +19,13 @@ const macroValue = z
   .min(0, "Cannot be negative")
   .max(10000, "Implausibly large — check the units");
 
+/** Cholesterol and sodium are printed in milligrams, so the ceiling is higher. */
+const milligramValue = z
+  .number()
+  .finite()
+  .min(0, "Cannot be negative")
+  .max(100000, "Implausibly large — check whether that is mg or g");
+
 export const verificationStatusSchema = z.enum([
   "label_verified",
   "usda_verified",
@@ -78,6 +85,12 @@ export const foodInputSchema = z
     carbsPerServing: macroValue.default(0),
     fiberPerServing: macroValue.default(0),
 
+    // Secondary label values. Nullable — absent is not the same as zero.
+    sugarPerServing: macroValue.nullable().default(null),
+    saturatedFatPerServing: macroValue.nullable().default(null),
+    cholesterolMgPerServing: milligramValue.nullable().default(null),
+    sodiumMgPerServing: milligramValue.nullable().default(null),
+
     dataSource: dataSourceSchema,
     externalFoodId: z.string().trim().max(60).nullable().default(null),
     verificationStatus: verificationStatusSchema,
@@ -95,6 +108,22 @@ export const foodInputSchema = z
     },
   )
   .refine(
+    (f) => f.sugarPerServing == null || f.sugarPerServing <= f.carbsPerServing + 0.001,
+    {
+      message: "Sugar cannot exceed total carbohydrates",
+      path: ["sugarPerServing"],
+    },
+  )
+  .refine(
+    (f) =>
+      f.saturatedFatPerServing == null ||
+      f.saturatedFatPerServing <= f.fatPerServing + 0.001,
+    {
+      message: "Saturated fat cannot exceed total fat",
+      path: ["saturatedFatPerServing"],
+    },
+  )
+  .refine(
     (f) => f.verificationStatus !== "ai_estimated" || f.confidenceScore != null,
     {
       message: "AI-estimated foods must carry a confidence score",
@@ -102,7 +131,16 @@ export const foodInputSchema = z
     },
   );
 
+/** Parsed shape — every field present, defaults applied. */
 export type FoodInput = z.infer<typeof foodInputSchema>;
+
+/**
+ * Authored shape — defaulted fields may be omitted.
+ *
+ * Seed data is written by hand against this, so adding a new optional field
+ * does not mean editing forty-one records to say `null` forty-one times.
+ */
+export type FoodDraft = z.input<typeof foodInputSchema>;
 
 export const foodLogInputSchema = z.object({
   foodId: z.string().min(1),

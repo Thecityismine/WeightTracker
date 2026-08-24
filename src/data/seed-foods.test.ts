@@ -3,6 +3,9 @@ import { SEED_FOODS } from "./seed-foods";
 import { foodInputSchema } from "@/lib/schemas";
 import { computeLogMacros } from "@/lib/nutrition";
 
+/** Seed entries are authored as drafts; this is the shape actually stored. */
+const PARSED = SEED_FOODS.map((f) => foodInputSchema.parse(f));
+
 describe("seed foods", () => {
   it("has a useful starting set", () => {
     // The roadmap calls for the 30-50 foods actually eaten.
@@ -31,7 +34,7 @@ describe("seed foods", () => {
   });
 
   it("every food has a serving weight, so it can be logged by grams", () => {
-    for (const food of SEED_FOODS) {
+    for (const food of PARSED) {
       expect(food.servingWeightGrams, food.name).toBeGreaterThan(0);
     }
   });
@@ -40,7 +43,7 @@ describe("seed foods", () => {
     // Atwater: 4 kcal/g protein, 9 kcal/g fat, 4 kcal/g carb. Labels round and
     // fiber is only partly available, so this is a loose sanity check — it is
     // here to catch a typo'd decimal point, not to police label rounding.
-    for (const food of SEED_FOODS) {
+    for (const food of PARSED) {
       const derived =
         food.proteinPerServing * 4 +
         food.fatPerServing * 9 +
@@ -60,7 +63,7 @@ describe("seed foods", () => {
   });
 
   it("fiber never exceeds carbohydrates", () => {
-    for (const food of SEED_FOODS) {
+    for (const food of PARSED) {
       expect(food.fiberPerServing, food.name).toBeLessThanOrEqual(
         food.carbsPerServing,
       );
@@ -68,7 +71,7 @@ describe("seed foods", () => {
   });
 
   it("label-verified foods actually claim a label as their source", () => {
-    for (const food of SEED_FOODS) {
+    for (const food of PARSED) {
       if (food.verificationStatus === "label_verified") {
         expect(food.dataSource, food.name).toBe("nutrition_label");
       }
@@ -81,11 +84,11 @@ describe("seed foods", () => {
   });
 
   it("computes a real breakfast correctly end to end", () => {
-    const egg = SEED_FOODS.find((f) => f.name === "Egg, large")!;
-    const oatmeal = SEED_FOODS.find((f) =>
+    const egg = PARSED.find((f) => f.name === "Egg, large")!;
+    const oatmeal = PARSED.find((f) =>
       f.name.startsWith("Instant oatmeal"),
     )!;
-    const banana = SEED_FOODS.find((f) => f.name === "Banana")!;
+    const banana = PARSED.find((f) => f.name === "Banana")!;
 
     const eggs = computeLogMacros(egg, 2);
     expect(eggs.calories).toBe(144);

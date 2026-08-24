@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  computeExtendedMacros,
   computeLogMacros,
   dayStatus,
   formatCalories,
@@ -273,5 +274,49 @@ describe("trailingAverage", () => {
 
   it("returns null with no data rather than NaN", () => {
     expect(trailingAverage([])).toBeNull();
+  });
+});
+
+describe("computeExtendedMacros", () => {
+  const LABEL = {
+    sugarPerServing: 12,
+    saturatedFatPerServing: 1.5,
+    cholesterolMgPerServing: 30,
+    sodiumMgPerServing: 210,
+  };
+
+  it("scales by quantity like the core macros", () => {
+    const m = computeExtendedMacros(LABEL, 2);
+    expect(m.sugar).toBe(24);
+    expect(m.saturatedFat).toBe(3);
+    expect(m.cholesterolMg).toBe(60);
+    expect(m.sodiumMg).toBe(420);
+  });
+
+  it("keeps unknown values unknown instead of turning them into zero", () => {
+    // A food with no sodium on its label must not report 0 mg of sodium —
+    // that would understate a day's total while looking authoritative.
+    const partial = { ...LABEL, sodiumMgPerServing: null };
+    const m = computeExtendedMacros(partial, 3);
+    expect(m.sodiumMg).toBeNull();
+    expect(m.sugar).toBe(36);
+  });
+
+  it("returns all nulls for a food with none of them recorded", () => {
+    const m = computeExtendedMacros(
+      {
+        sugarPerServing: null,
+        saturatedFatPerServing: null,
+        cholesterolMgPerServing: null,
+        sodiumMgPerServing: null,
+      },
+      2,
+    );
+    expect(m).toEqual({
+      sugar: null,
+      saturatedFat: null,
+      cholesterolMg: null,
+      sodiumMg: null,
+    });
   });
 });
