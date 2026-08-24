@@ -249,3 +249,28 @@ describe("interpretWeek", () => {
     expect(interpretWeek(week, TARGETS)).toContain("fell 0.4 lb");
   });
 });
+
+describe("detectStall verdicts", () => {
+  it("separates 'cannot tell yet' from 'going fine'", () => {
+    // Both leave stalled false, but only one is a positive finding.
+    expect(detectStall([{ weightChange: 0 }] as WeekSummary[], 2800).verdict).toBe(
+      "insufficient",
+    );
+
+    expect(
+      detectStall(
+        [{ weightChange: 0.3 }, { weightChange: 0.3 }] as WeekSummary[],
+        2800,
+      ).verdict,
+    ).toBe("on_track");
+  });
+
+  it("reports a plateau as stalled", () => {
+    expect(
+      detectStall(
+        [{ weightChange: 0 }, { weightChange: 0 }] as WeekSummary[],
+        2800,
+      ).verdict,
+    ).toBe("stalled");
+  });
+});

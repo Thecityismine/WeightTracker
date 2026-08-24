@@ -279,9 +279,12 @@ export default function ProgressPage() {
             <TrendingUp
               className="mt-0.5 h-4 w-4 shrink-0"
               style={{
-                color: recommendation.stalled
-                  ? "var(--warning)"
-                  : "var(--success)",
+                color:
+                  recommendation.verdict === "stalled"
+                    ? "var(--warning)"
+                    : recommendation.verdict === "on_track"
+                      ? "var(--success)"
+                      : "var(--text-muted)",
               }}
             />
             {applied

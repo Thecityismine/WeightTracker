@@ -31,13 +31,34 @@ export async function requireOwner(
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }
 
+  // Initialising the Admin SDK is a SERVER concern and is resolved before the
+  // token is examined. Folding both into one try meant a missing service
+  // account surfaced as "Invalid token" — blaming the user's login for a
+  // configuration problem they cannot see or fix from the client.
+  let auth: ReturnType<typeof adminAuth>;
   try {
-    const decoded = await adminAuth().verifyIdToken(token);
+    auth = adminAuth();
+  } catch (e) {
+    console.error("Firebase Admin is not configured", e);
+    return NextResponse.json(
+      {
+        error:
+          "This feature needs the server's Firebase service-account key, which is not configured. See SETUP.md step 4.",
+      },
+      { status: 503 },
+    );
+  }
+
+  try {
+    const decoded = await auth.verifyIdToken(token);
     if (decoded.uid !== allowedUid) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return { uid: decoded.uid };
   } catch {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Your session has expired. Sign out and back in." },
+      { status: 401 },
+    );
   }
 }

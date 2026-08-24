@@ -165,6 +165,13 @@ export function estimateGoalDate(
 
 export type Recommendation = {
   stalled: boolean;
+  /**
+   * Distinguishes "nothing is happening" from "not enough data to tell".
+   * Both leave `stalled` false, but they are not the same statement, and
+   * showing a success colour for the second one implies a verdict that has
+   * not been reached.
+   */
+  verdict: "insufficient" | "on_track" | "stalled";
   /** Suggested change to the daily calorie target. */
   suggestedCalorieIncrease: number;
   message: string;
@@ -187,6 +194,7 @@ export function detectStall(
   if (lastTwo.length < 2) {
     return {
       stalled: false,
+      verdict: "insufficient",
       suggestedCalorieIncrease: 0,
       message:
         "Not enough history yet. Two full weeks of weigh-ins will show whether the trend is real.",
@@ -198,6 +206,7 @@ export function detectStall(
   if (total >= 0.1) {
     return {
       stalled: false,
+      verdict: "on_track",
       suggestedCalorieIncrease: 0,
       message: `Average weight is up ${total.toFixed(1)} lb over the last two weeks. Keep the calorie target where it is.`,
     };
@@ -205,6 +214,7 @@ export function detectStall(
 
   return {
     stalled: true,
+    verdict: "stalled",
     suggestedCalorieIncrease: 150,
     message: `Average weight has not moved in two weeks. Consider raising the daily calorie target to ${(
       currentCalorieTarget + 150

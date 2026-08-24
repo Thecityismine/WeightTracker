@@ -10,6 +10,7 @@ import { useFoods } from "@/lib/hooks/use-foods";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { useWeights } from "@/lib/hooks/use-weights";
 import { loadStarterFoods } from "@/lib/seed-client";
+import { rebuildAllDailyTotals } from "@/lib/rebuild-totals-client";
 import { defaultProfileInput, saveProfile } from "@/lib/repo/profile";
 import { formatWeight } from "@/lib/nutrition";
 import { daysSince } from "@/lib/dates";
@@ -17,7 +18,9 @@ import type { ProfileInput } from "@/lib/schemas";
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
-  const { profile, loading: profileLoading } = useProfile(user?.uid ?? null);
+  const { profile, targets, loading: profileLoading } = useProfile(
+    user?.uid ?? null,
+  );
   const { foods } = useFoods(user?.uid ?? null);
   const { latest, average7 } = useWeights(user?.uid ?? null);
 
@@ -57,6 +60,34 @@ export default function SettingsPage() {
 
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState<string | null>(null);
+
+  const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildResult, setRebuildResult] = useState<string | null>(null);
+
+  async function handleRebuild() {
+    if (!user) return;
+    setRebuilding(true);
+    setRebuildResult(null);
+    try {
+      const { days, entries, corrected } = await rebuildAllDailyTotals(
+        user.uid,
+        targets,
+      );
+      setRebuildResult(
+        corrected === 0
+          ? `Checked ${days} days from ${entries} entries. Everything already matched.`
+          : `Recalculated ${days} days from ${entries} entries. ${corrected} ${
+              corrected === 1 ? "day was" : "days were"
+            } out of date and ${corrected === 1 ? "is" : "are"} now correct.`,
+      );
+    } catch (e) {
+      setRebuildResult(
+        e instanceof Error ? e.message : "Could not rebuild the totals.",
+      );
+    } finally {
+      setRebuilding(false);
+    }
+  }
 
   async function handleSeed() {
     if (!user) return;
@@ -323,8 +354,30 @@ export default function SettingsPage() {
 
           <p className="mt-2 text-[12px] leading-relaxed text-muted">
             {seedResult ??
-              "Adds 41 common foods entered from labels and USDA references. Safe to run more than once — it only adds what is missing."}
+              "Adds common foods entered from labels and USDA references. Safe to run more than once — it only adds what is missing."}
           </p>
+
+          <div className="mt-5 border-t border-white/[0.06] pt-4">
+            <button
+              type="button"
+              onClick={() => void handleRebuild()}
+              disabled={rebuilding}
+              className="btn-secondary pressable flex h-11 w-full items-center justify-center gap-2 text-[14px] font-[600] disabled:opacity-60"
+            >
+              {rebuilding ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Recalculating…
+                </>
+              ) : (
+                "Recalculate daily totals"
+              )}
+            </button>
+            <p className="mt-2 text-[12px] leading-relaxed text-muted">
+              {rebuildResult ??
+                "The calendar, weekly averages and report read a cached total per day. Run this if those numbers ever look out of step with what you logged — it recomputes every day from the food entries themselves."}
+            </p>
+          </div>
         </Card>
 
         {/* ---------------------------------------------------- account */}
