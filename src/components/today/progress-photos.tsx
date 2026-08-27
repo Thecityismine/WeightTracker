@@ -266,11 +266,11 @@ function ProgressPhotoSheet({
           />
         </label>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <label className="text-[12px] text-muted">
+        <div className="mt-5 grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-3">
+          <label className="min-w-0 text-[12px] text-muted">
             Photo date
             <input
-              className="input mt-1 h-11 w-full px-3 text-[14px]"
+              className="input mt-1 h-11 w-full min-w-0 max-w-full px-3 text-[14px]"
               type="date"
               min={existing ? `${existing.monthKey}-01` : undefined}
               max={existing ? monthEnd(existing.monthKey) : todayKey()}
@@ -278,7 +278,7 @@ function ProgressPhotoSheet({
               onChange={(e) => setDate(e.target.value)}
             />
           </label>
-          <label className="text-[12px] text-muted">
+          <label className="min-w-0 text-[12px] text-muted">
             Weight ({unit})
             <NumberField
               value={weight}
@@ -287,7 +287,7 @@ function ProgressPhotoSheet({
               onNull={() => setWeight(null)}
               step="0.1"
               placeholder="Optional"
-              className="input metric mt-1 h-11 w-full px-3 text-[14px]"
+              className="input metric mt-1 h-11 w-full min-w-0 max-w-full px-3 text-[14px]"
             />
           </label>
         </div>
