@@ -167,6 +167,15 @@ export const weightLogInputSchema = z.object({
 
 export type WeightLogInput = z.infer<typeof weightLogInputSchema>;
 
+export const progressPhotoInputSchema = z.object({
+  photoDate: isoDate,
+  imageUrl: z.string().url(),
+  storagePath: z.string().startsWith("progress/"),
+  weight: z.number().finite().min(30).max(700).nullable(),
+});
+
+export type ProgressPhotoInput = z.infer<typeof progressPhotoInputSchema>;
+
 /** Wide bounds — these only exist to reject a garbled screenshot read. */
 const scaleValue = (max: number) =>
   z.number().finite().min(0).max(max).nullable().default(null);

@@ -7,6 +7,7 @@ import { MacroCards } from "@/components/today/macro-cards";
 import { MealSection } from "@/components/today/meal-section";
 import { QuantitySheet } from "@/components/food-picker/quantity-sheet";
 import { WeightSheet } from "@/components/weight/weight-sheet";
+import { ProgressPhotos } from "@/components/today/progress-photos";
 import { useAuth } from "@/lib/auth-context";
 import { useFoodPicker } from "@/lib/food-picker-context";
 import { useDayLogs } from "@/lib/hooks/use-day-logs";
@@ -270,6 +271,12 @@ export default function TodayPage() {
         <div className="h-8" />
         </div>
       </div>
+
+      <ProgressPhotos
+        userId={user?.uid ?? null}
+        suggestedWeight={latest?.weight ?? profile?.startingWeight ?? null}
+        unit={unit}
+      />
 
       {toast ? (
         <button

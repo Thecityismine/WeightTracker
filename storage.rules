@@ -29,6 +29,16 @@ service firebase.storage {
       allow delete: if isOwner() && userId == ownerUid();
     }
 
+    // Private monthly progress photos, stored separately from food labels.
+    match /progress/{userId}/{allPaths=**} {
+      allow read: if isOwner() && userId == ownerUid();
+      allow write: if isOwner()
+        && userId == ownerUid()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner() && userId == ownerUid();
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

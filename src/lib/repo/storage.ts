@@ -33,3 +33,29 @@ export async function deleteLabelImage(url: string): Promise<void> {
     // Already gone, or never ours to delete.
   }
 }
+
+export async function uploadProgressImage(
+  userId: string,
+  file: File,
+): Promise<{ url: string; path: string }> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("That file is not an image.");
+  }
+  if (file.size > MAX_BYTES) {
+    throw new Error("That image is larger than 10 MB.");
+  }
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `progress/${userId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+  const storageRef = ref(getFirebaseStorage(), path);
+  await uploadBytes(storageRef, file, { contentType: file.type });
+  return { url: await getDownloadURL(storageRef), path };
+}
+
+export async function deleteStoredImage(path: string): Promise<void> {
+  try {
+    await deleteObject(ref(getFirebaseStorage(), path));
+  } catch {
+    // Best effort: database state must not be held hostage by a missing object.
+  }
+}

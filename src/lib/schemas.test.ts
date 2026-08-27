@@ -1,5 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { foodInputSchema } from "./schemas";
+import { foodInputSchema, progressPhotoInputSchema } from "./schemas";
+
+describe("progress photos", () => {
+  it("accepts a private progress image with optional weight", () => {
+    expect(
+      progressPhotoInputSchema.safeParse({
+        photoDate: "2026-08-26",
+        imageUrl: "https://firebasestorage.googleapis.com/photo.jpg",
+        storagePath: "progress/user/photo.jpg",
+        weight: 144.3,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects paths outside the progress-photo area", () => {
+    expect(
+      progressPhotoInputSchema.safeParse({
+        photoDate: "2026-08-26",
+        imageUrl: "https://example.com/photo.jpg",
+        storagePath: "labels/user/photo.jpg",
+        weight: null,
+      }).success,
+    ).toBe(false);
+  });
+});
 
 const BASE = {
   name: "Test food",

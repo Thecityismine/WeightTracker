@@ -170,6 +170,22 @@ export type WeightLog = {
   createdAt: string;
 };
 
+/** One progress photo per calendar month, keyed by YYYY-MM. */
+export type ProgressPhoto = {
+  id: string;
+  userId: string;
+  /** YYYY-MM, and also the document id. */
+  monthKey: string;
+  /** Local YYYY-MM-DD date on which the photo was taken. */
+  photoDate: string;
+  imageUrl: string;
+  storagePath: string;
+  /** A snapshot so an old comparison does not change with later weight edits. */
+  weight: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 /**
  * A smart-scale body composition reading.
  *
