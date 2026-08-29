@@ -201,8 +201,8 @@ export default function SettingsPage() {
             />
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div>
+          <div className="mt-3 grid grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-3">
+            <div className="min-w-0">
               <label className="label-metric mb-2 block" htmlFor="start">
                 Start date
               </label>
@@ -211,10 +211,10 @@ export default function SettingsPage() {
                 type="date"
                 value={draft.startingDate}
                 onChange={(e) => set("startingDate", e.target.value)}
-                className="input h-11 w-full px-3 text-[14px]"
+                className="input h-11 w-full min-w-0 max-w-full px-3 text-[14px]"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="label-metric mb-2 block" htmlFor="birth">
                 Birthday
               </label>
@@ -223,7 +223,7 @@ export default function SettingsPage() {
                 type="date"
                 value={draft.birthDate ?? ""}
                 onChange={(e) => set("birthDate", e.target.value || null)}
-                className="input h-11 w-full px-3 text-[14px]"
+                className="input h-11 w-full min-w-0 max-w-full px-3 text-[14px]"
               />
             </div>
           </div>
