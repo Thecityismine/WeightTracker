@@ -14,6 +14,11 @@ export const VERIFICATION: Record<
     label: "USDA verified",
     short: "USDA",
   },
+  barcode_imported: {
+    color: "var(--cyan)",
+    label: "Barcode database import",
+    short: "Barcode",
+  },
   user_entered: {
     color: "var(--text-muted)",
     label: "User entered",

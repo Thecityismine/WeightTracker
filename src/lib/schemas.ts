@@ -29,6 +29,7 @@ const milligramValue = z
 export const verificationStatusSchema = z.enum([
   "label_verified",
   "usda_verified",
+  "barcode_imported",
   "user_entered",
   "ai_estimated",
 ]);
@@ -37,6 +38,7 @@ export const dataSourceSchema = z.enum([
   "nutrition_label",
   "usda_branded",
   "usda_generic",
+  "open_food_facts",
   "ai_estimate",
   "manual",
 ]);

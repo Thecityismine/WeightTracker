@@ -6,6 +6,7 @@ export type { MealCategory };
 export type VerificationStatus =
   | "label_verified"
   | "usda_verified"
+  | "barcode_imported"
   | "user_entered"
   | "ai_estimated";
 
@@ -13,6 +14,7 @@ export type DataSource =
   | "nutrition_label"
   | "usda_branded"
   | "usda_generic"
+  | "open_food_facts"
   | "ai_estimate"
   | "manual";
 

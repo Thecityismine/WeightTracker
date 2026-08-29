@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Database, Heart, Plus, Search } from "lucide-react";
+import { Barcode, ChevronRight, Database, Heart, Plus, Search } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
 import { VerificationBadge } from "@/components/foods/verification-badge";
 import { useAuth } from "@/lib/auth-context";
@@ -100,10 +100,17 @@ export default function FoodsPage() {
           </select>
         </div>
 
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Link
+            href="/foods/barcode"
+            className="btn-primary pressable col-span-2 flex h-11 items-center justify-center gap-2 text-[14px] font-[600]"
+          >
+            <Barcode className="h-4 w-4" />
+            Scan barcode
+          </Link>
           <Link
             href="/foods/new"
-            className="btn-primary pressable flex h-11 flex-1 items-center justify-center gap-2 text-[14px] font-[600]"
+            className="btn-secondary pressable flex h-11 items-center justify-center gap-2 text-[14px] font-[600]"
           >
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             New food

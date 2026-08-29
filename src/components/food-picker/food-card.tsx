@@ -8,6 +8,7 @@ import type { Food, VerificationStatus } from "@/types";
 const SOURCE: Record<VerificationStatus, { color: string; label: string }> = {
   label_verified: { color: "var(--success)", label: "Nutrition label verified" },
   usda_verified: { color: "var(--blue)", label: "USDA verified" },
+  barcode_imported: { color: "var(--cyan)", label: "Barcode import" },
   user_entered: { color: "var(--text-muted)", label: "User entered" },
   ai_estimated: { color: "var(--warning)", label: "AI estimated" },
 };
