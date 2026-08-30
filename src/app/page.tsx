@@ -144,7 +144,7 @@ export default function TodayPage() {
     : null;
 
   return (
-    <main className="mx-auto max-w-lg px-0 lg:max-w-5xl lg:px-6">
+    <main className="mx-auto max-w-lg px-0 min-[700px]:max-w-5xl min-[700px]:px-6">
       <header className="px-5 pb-5 pt-9">
         <h1 className="text-[26px] font-[650] leading-tight tracking-tight text-foreground">
           {mounted ? greeting(hour) : " "}
@@ -229,12 +229,12 @@ export default function TodayPage() {
       </header>
 
       {/*
-        One column on a phone. From `lg` the day's summary sits in a pinned
-        left column while the meal list scrolls beside it — on a wide screen
-        the numbers you are logging against should stay in view.
+        One column on a phone. At tablet width the day's summary sits in a
+        pinned left column while the meal list scrolls beside it — the iPad
+        should use its canvas instead of rendering a phone column in the middle.
       */}
-      <div className="px-4 lg:grid lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start lg:gap-6 lg:px-0">
-        <div className="lg:sticky lg:top-6">
+      <div className="px-4 min-[700px]:grid min-[700px]:grid-cols-[minmax(0,340px)_minmax(0,1fr)] min-[700px]:items-start min-[700px]:gap-6 min-[700px]:px-0">
+        <div className="min-[700px]:sticky min-[700px]:top-6">
           <CalorieCard consumed={totals.calories} target={targets.calories} />
 
           <MacroCards
@@ -247,7 +247,7 @@ export default function TodayPage() {
           />
         </div>
 
-        <div className="lg:pt-0">
+        <div className="min-[700px]:pt-0">
         {loading && logs.length === 0 ? (
           <p className="pt-10 text-center text-[13px] text-muted">Loading…</p>
         ) : (

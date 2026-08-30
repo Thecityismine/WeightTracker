@@ -14,11 +14,11 @@ import { useFoodPicker } from "@/lib/food-picker-context";
 import type { MealCategory } from "@/lib/constants";
 
 /**
- * Desktop and tablet navigation.
+ * Desktop navigation.
  *
  * A bottom bar is a thumb-reach pattern; on a screen the size of an iPad it
  * strands the controls at the far edge and wastes the width. This rail takes
- * over from `md` up, where there is room for it and no thumb to reach with.
+ * over at `lg`, after portrait iPads have used the full canvas for content.
  *
  * Foods gets a real entry here. On mobile it has no nav slot because the
  * elevated + occupies that position, but with a full rail there is room.
@@ -40,7 +40,7 @@ export function SideNav() {
   // flush against the top edge on any device that reports no inset.
   return (
     <nav
-      className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col border-r border-white/[0.06] px-4 pb-6 md:flex"
+      className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col border-r border-white/[0.06] px-4 pb-6 lg:flex"
       style={{
         background: "rgba(9, 12, 16, 0.72)",
         backdropFilter: "blur(20px)",

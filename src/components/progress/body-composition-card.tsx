@@ -1,22 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Camera, Loader2, Minus, Trash2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { Card, SectionLabel } from "@/components/ui/card";
 import { NumberField } from "@/components/ui/number-field";
 import { useAuth } from "@/lib/auth-context";
 import { useBodyComposition } from "@/lib/hooks/use-body-composition";
-import { deleteComposition, saveComposition } from "@/lib/repo/body-composition";
+import { saveComposition } from "@/lib/repo/body-composition";
 import { downscaleImage } from "@/lib/image";
 import {
   compareReadings,
   formatMetric,
-  formatPercentChange,
   METRICS,
   type MetricChange,
   type MetricKey,
 } from "@/lib/body-composition";
-import { formatLongDate, fromDateKey, todayKey } from "@/lib/dates";
+import { fromDateKey, todayKey } from "@/lib/dates";
 import { format } from "date-fns";
 import type { BodyComposition } from "@/types";
 
@@ -26,7 +25,7 @@ type Draft = Partial<Record<MetricKey, number | null>> & {
 
 export function BodyCompositionCard() {
   const { user, getToken } = useAuth();
-  const { readings, latest, previous } = useBodyComposition(user?.uid ?? null);
+  const { latest } = useBodyComposition(user?.uid ?? null);
 
   const [busy, setBusy] = useState<"scan" | "save" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +33,8 @@ export function BodyCompositionCard() {
   const [unreadable, setUnreadable] = useState<string[]>([]);
   const [date, setDate] = useState(todayKey());
 
-  const changes = compareReadings(latest, previous);
+  // The card is intentionally a latest-reading display, not a history view.
+  const changes = compareReadings(latest, null);
 
   async function handleScreenshot(file: File) {
     setBusy("scan");
@@ -197,11 +197,6 @@ export function BodyCompositionCard() {
             ))}
           </div>
 
-          <p className="mt-3 px-1 text-[11px] leading-relaxed text-muted">
-            {previous
-              ? `Change against your ${format(fromDateKey(previous.date), "MMMM d")} reading. Green means moving toward a lean gain.`
-              : "Save a second reading to see change over time."}
-          </p>
         </>
       ) : (
         <p className="mt-2 px-1 text-[13px] leading-relaxed text-muted">
@@ -229,23 +224,6 @@ export function BodyCompositionCard() {
         />
       </label>
 
-      {latest ? (
-        <button
-          type="button"
-          onClick={() => void deleteComposition(latest.date)}
-          className="mt-2 flex w-full items-center justify-center gap-1.5 py-1.5 text-[12px] text-muted"
-        >
-          <Trash2 className="h-3 w-3" />
-          Remove {formatLongDate(latest.date)} reading
-        </button>
-      ) : null}
-
-      {readings.length > 0 ? (
-        <p className="mt-1 text-center text-[11px] text-muted">
-          {readings.length} reading{readings.length === 1 ? "" : "s"} stored
-        </p>
-      ) : null}
-
       {error ? (
         <p className="mt-2 text-center text-[13px] text-danger">{error}</p>
       ) : null}
@@ -254,20 +232,6 @@ export function BodyCompositionCard() {
 }
 
 function MetricTile({ change: c }: { change: MetricChange }) {
-  const tint =
-    c.favorable === true
-      ? "var(--success)"
-      : c.favorable === false
-        ? "var(--danger)"
-        : "var(--text-muted)";
-
-  const Arrow =
-    c.delta == null || c.delta === 0
-      ? Minus
-      : c.delta > 0
-        ? ArrowUp
-        : ArrowDown;
-
   return (
     <div className="rounded-[12px] border border-white/[0.06] bg-surface/50 px-2.5 py-2.5">
       <p className="text-[10px] leading-tight text-muted">{c.def.label}</p>
@@ -279,16 +243,8 @@ function MetricTile({ change: c }: { change: MetricChange }) {
         ) : null}
       </p>
 
-      <p
-        className="metric mt-1.5 flex items-center gap-0.5 text-[11px]"
-        style={{ color: tint }}
-      >
-        <Arrow className="h-3 w-3" strokeWidth={2.5} />
-        {formatPercentChange(c.percentChange)}
-      </p>
-
       {c.rating ? (
-        <p className="mt-1 truncate text-[9.5px] text-muted">{c.rating}</p>
+        <p className="mt-2 truncate text-[9.5px] text-muted">{c.rating}</p>
       ) : null}
     </div>
   );

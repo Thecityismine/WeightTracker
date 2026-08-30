@@ -41,7 +41,7 @@ export function ProgressPhotos({
   }
 
   return (
-    <section className="mt-8 border-t border-white/[0.06] px-4 pb-28 pt-7 lg:px-0 lg:pb-12">
+    <section className="mt-8 border-t border-white/[0.06] px-4 pb-28 pt-7 min-[700px]:px-0 lg:pb-12">
       <div className="mb-3 flex items-end justify-between">
         <div>
           <SectionLabel>Monthly progress</SectionLabel>
@@ -66,7 +66,7 @@ export function ProgressPhotos({
           Loading photos…
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 lg:gap-5">
+        <div className="grid grid-cols-2 gap-3 min-[700px]:gap-5">
           <PhotoCard photo={previous} side="previous" unit={unit} onOpen={openEditor} />
           <PhotoCard photo={latest} side="latest" unit={unit} onOpen={openEditor} />
         </div>

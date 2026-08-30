@@ -31,10 +31,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
       {/*
         Bottom padding clears the nav bar and home indicator on phones. From
-        `md` the rail takes over, so the padding goes and the content shifts
+        `lg` the rail takes over, so the padding goes and the content shifts
         clear of the rail instead.
       */}
-      <div className="min-h-dvh pt-safe pb-[calc(80px+var(--safe-bottom))] md:pb-10 md:pl-[236px]">
+      <div className="min-h-dvh pt-safe pb-[calc(80px+var(--safe-bottom))] lg:pb-10 lg:pl-[236px]">
         {children}
       </div>
 

@@ -22,13 +22,13 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] pb-safe md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] pb-safe lg:hidden"
       style={{
         background: "rgba(9, 12, 16, 0.86)",
         backdropFilter: "blur(20px)",
       }}
     >
-      <div className="mx-auto flex h-[68px] max-w-lg items-center justify-around px-2">
+      <div className="mx-auto flex h-[68px] max-w-lg items-center justify-around px-2 min-[700px]:max-w-3xl min-[700px]:px-6">
         {left.map((item) => (
           <NavItem key={item.href} {...item} pathname={pathname} />
         ))}

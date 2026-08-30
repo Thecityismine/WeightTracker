@@ -46,7 +46,7 @@ export function WeeklyCalories({
   const isCurrentWeek = currentWeek.includes(today);
 
   return (
-    <section className="mt-8 border-t border-white/[0.06] px-4 pt-7 lg:px-0">
+    <section className="mt-8 border-t border-white/[0.06] px-4 pt-7 min-[700px]:px-0">
       <div className="mb-3">
         <SectionLabel>Weekly calories</SectionLabel>
         <p className="mt-1 text-[13px] text-secondary">
